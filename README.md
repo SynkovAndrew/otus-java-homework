@@ -14,5 +14,5 @@ Run following commands
 
 ```
 mvn clean package
-java -jar hw01maven/target/artifact.jar
+java -jar hw01maven/target/hw01maven-application.jar
 ```
