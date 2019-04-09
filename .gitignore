@@ -2,3 +2,5 @@
 .idea
 target
 hw01maven/target
+hw02shade/dependency-reduced-pom.xml
+hw02shade/target
