@@ -104,17 +104,19 @@ public class DIYArrayList<T> implements List<T> {
         checkIndex(index);
         if (index > currentIndex) {
             array[index] = element;
-        } else if (index == currentIndex){
+        } else if (index == currentIndex) {
             add(element);
         } else {
             int shift = currentIndex - index;
-            if (shift < capacity - currentIndex) {
+            if (shift > capacity - currentIndex) {
                 array = getIncreasedArray(array);
                 capacity = capacity * INCREASE_FACTOR;
             }
-            for (int i = currentIndex - 1; i == index; i--) {
-                array[i + 1] = array[i];
+            for (int j = currentIndex; j > index; j--) {
+                array[j] = array[j - 1];
             }
+            array[index] = element;
+            currentIndex++;
         }
     }
 
@@ -148,11 +150,16 @@ public class DIYArrayList<T> implements List<T> {
     }
 
     public ListIterator<T> listIterator(int index) {
-        throw new UnsupportedOperationException();
+        return new DIYListIterator(index);
     }
 
     public List<T> subList(int fromIndex, int toIndex) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void sort(Comparator<? super T> c) {
+        Arrays.sort((T[]) array, 0, currentIndex, c);
     }
 
     private Object[] getIncreasedArray(Object[] array) {
@@ -190,11 +197,16 @@ public class DIYArrayList<T> implements List<T> {
     }
 
     private class DIYListIterator implements ListIterator<T> {
-        private int index;
+        public int index;
         private int lastReturned;
 
         private DIYListIterator() {
             index = 0;
+            lastReturned = -1;
+        }
+
+        private DIYListIterator(final int i) {
+            index = i;
             lastReturned = -1;
         }
 
