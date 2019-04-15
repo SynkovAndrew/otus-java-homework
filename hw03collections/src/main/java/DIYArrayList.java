@@ -102,6 +102,20 @@ public class DIYArrayList<T> implements List<T> {
 
     public void add(int index, T element) {
         checkIndex(index);
+        if (index > currentIndex) {
+            array[index] = element;
+        } else if (index == currentIndex){
+            add(element);
+        } else {
+            int shift = currentIndex - index;
+            if (shift < capacity - currentIndex) {
+                array = getIncreasedArray(array);
+                capacity = capacity * INCREASE_FACTOR;
+            }
+            for (int i = currentIndex - 1; i == index; i--) {
+                array[i + 1] = array[i];
+            }
+        }
     }
 
     public T remove(int index) {
@@ -227,10 +241,8 @@ public class DIYArrayList<T> implements List<T> {
             if (lastReturned < 0) {
                 throw new IllegalStateException();
             }
-            for (int i = index; i <= currentIndex; i++) {
-                array[i] = array[i + 1];
-            }
-            index--;
+            DIYArrayList.this.remove(lastReturned);
+            index = lastReturned;
             lastReturned = -1;
         }
 
@@ -239,15 +251,17 @@ public class DIYArrayList<T> implements List<T> {
             if (lastReturned < 0) {
                 throw new IllegalStateException();
             }
-            array[index] = t;
+            DIYArrayList.this.set(lastReturned, t);
+            lastReturned = -1;
         }
 
         @Override
         public void add(T t) {
-            for (int i = index; i < capacity - 1; i++) {
-
-                array[i] = array[i + 1];
+            if (lastReturned < 0) {
+                throw new IllegalStateException();
             }
+            DIYArrayList.this.add(index++, t);
+            lastReturned = -1;
         }
     }
 }
