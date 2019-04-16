@@ -125,7 +125,7 @@ public class DIYArrayList<T> implements List<T> {
         T removed = (T) array[index];
 
         for (int i = index; i < currentIndex; i++) {
-            array[i] = array[i + 1];
+            array[i] = i + 1 == currentIndex ? null : array[i + 1];
         }
         currentIndex--;
 

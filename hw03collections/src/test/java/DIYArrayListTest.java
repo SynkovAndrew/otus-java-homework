@@ -61,6 +61,17 @@ public class DIYArrayListTest {
     }
 
     @Test
+    public void testRemoveWithCapacity2() {
+        DIYArrayList<Integer> arrayList = new DIYArrayList<>(2);
+        arrayList.add(52);
+        arrayList.add(53);
+        arrayList.remove(0);
+
+        Assertions.assertEquals(arrayList.size(), 1);
+        Assertions.assertIterableEquals(Collections.singletonList(53), arrayList);
+    }
+
+    @Test
     public void testRemoveByIndex() {
         DIYArrayList<Integer> arrayList = new DIYArrayList<>();
         Collections.addAll(arrayList, Stream.iterate(0, i -> i + 1).limit(11).toArray(Integer[]::new));
