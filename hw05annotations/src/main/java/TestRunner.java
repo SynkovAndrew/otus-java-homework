@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -22,19 +23,27 @@ public class TestRunner {
     }
 
     private static void process(Class clazz) {
-        beforeAllMethods.forEach(method -> invoke(method, null));
+        beforeAllMethods.stream()
+                .sorted(Comparator.comparingInt(m -> m.getAnnotation(CustomBeforeAll.class).order()))
+                .forEach(method -> invoke(method, null));
 
         testMethods.forEach(method ->
                 ofNullable(newInstance(clazz))
                         .ifPresent(inst -> {
                             System.out.println("\nNew test instance's been created: " + inst.hashCode() + "\n");
-                            beforeEachMethods.forEach(beforeEachMethod -> invoke(beforeEachMethod, inst));
+                            beforeEachMethods.stream()
+                                    .sorted(Comparator.comparingInt(m -> m.getAnnotation(CustomBeforeEach.class).order()))
+                                    .forEach(beforeEachMethod -> invoke(beforeEachMethod, inst));
                             invoke(method, inst);
-                            afterEachMethods.forEach(beforeEachMethod -> invoke(beforeEachMethod, inst));
+                            afterEachMethods.stream()
+                                    .sorted(Comparator.comparingInt(m -> m.getAnnotation(CustomAfterEach.class).order()))
+                                    .forEach(beforeEachMethod -> invoke(beforeEachMethod, inst));
                         }));
 
         System.out.println("\n");
-        afterAllMethods.forEach(method -> invoke(method, null));
+        afterAllMethods.stream()
+                .sorted(Comparator.comparingInt(m -> m.getAnnotation(CustomAfterAll.class).order()))
+                .forEach(method -> invoke(method, null));
     }
 
     private static void prepare(Class clazz) {

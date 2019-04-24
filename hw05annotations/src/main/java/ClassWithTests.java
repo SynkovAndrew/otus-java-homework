@@ -1,22 +1,23 @@
 import annotations.*;
 
 public class ClassWithTests {
-    @CustomBeforeAll
+    @CustomBeforeAll(order = 1)
     public static void beforeAll_first() {
         System.out.println("beforeAll_first");
     }
 
-    @CustomBeforeAll
+
+    @CustomBeforeAll(order = 2)
     public static void beforeAll_second() {
         System.out.println("beforeAll_second");
     }
 
-    @CustomBeforeEach
+    @CustomBeforeEach(order = 1)
     public void beforeEach_first() {
         System.out.println("beforeEach_first");
     }
 
-    @CustomBeforeEach
+    @CustomBeforeEach(order = 2)
     public void beforeEach_second() {
         System.out.println("beforeEach_second");
     }
@@ -36,22 +37,22 @@ public class ClassWithTests {
         System.out.println("test_third");
     }
 
-    @CustomAfterEach
+    @CustomAfterEach(order = 1)
     public void afterEach_first() {
         System.out.println("afterEach_first");
     }
 
-    @CustomAfterEach
+    @CustomAfterEach(order = 2)
     public void afterEach_second() {
         System.out.println("afterEach_second");
     }
 
-    @CustomAfterAll
+    @CustomAfterAll(order = 1)
     public static void afterAll_first() {
         System.out.println("afterAll_first");
     }
 
-    @CustomAfterAll
+    @CustomAfterAll(order = 2)
     public static void afterAll_second() {
         System.out.println("afterAll_second");
     }
