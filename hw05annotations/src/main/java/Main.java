@@ -1,5 +1,7 @@
+import test.TestRunner;
+
 public class Main {
     public static void main(String[] args) {
-        TestRunner.run(ClassWithTests.class);
+        TestRunner.runTests(ClassWithTests.class);
     }
 }

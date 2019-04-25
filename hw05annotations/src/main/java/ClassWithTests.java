@@ -6,10 +6,19 @@ public class ClassWithTests {
         System.out.println("beforeAll_first");
     }
 
-
     @CustomBeforeAll(order = 2)
     public static void beforeAll_second() {
         System.out.println("beforeAll_second");
+    }
+
+    @CustomAfterAll(order = 1)
+    public static void afterAll_first() {
+        System.out.println("afterAll_first");
+    }
+
+    @CustomAfterAll(order = 2)
+    public static void afterAll_second() {
+        System.out.println("afterAll_second");
     }
 
     @CustomBeforeEach(order = 1)
@@ -23,8 +32,9 @@ public class ClassWithTests {
     }
 
     @CustomTest
-    public void test_first() {
+    public void test_first() throws Exception {
         System.out.println("test_first");
+        throw new Exception("exception!!!");
     }
 
     @CustomTest
@@ -47,13 +57,8 @@ public class ClassWithTests {
         System.out.println("afterEach_second");
     }
 
-    @CustomAfterAll(order = 1)
-    public static void afterAll_first() {
-        System.out.println("afterAll_first");
-    }
-
-    @CustomAfterAll(order = 2)
-    public static void afterAll_second() {
-        System.out.println("afterAll_second");
+    @CustomAfterEach(order = 3)
+    public void afterEach_third() {
+        System.out.println("afterEach_third");
     }
 }
