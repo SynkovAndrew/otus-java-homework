@@ -1,4 +1,8 @@
-public class Calculator implements ICalculator {
+package jdk_proxy_impl;
+
+import common.Log;
+
+public class CalculatorWithIface implements ICalculator {
     @Log
     @Override
     public int add(final int a, final int b) {

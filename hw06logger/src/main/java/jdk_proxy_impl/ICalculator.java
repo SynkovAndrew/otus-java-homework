@@ -1,3 +1,5 @@
+package jdk_proxy_impl;
+
 public interface ICalculator {
     int add(final int a, final int b);
 
