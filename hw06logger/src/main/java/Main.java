@@ -7,6 +7,7 @@ public class Main {
 
         iCalculator.multiplyWithTwo(2);
         iCalculator.add(1, 3);
+        iCalculator.multiplyWithThree(3);
         iCalculator.addThreeIntegers(4, 5, 7);
 
         // cglib proxy
@@ -14,6 +15,7 @@ public class Main {
 
         calculator.multiplyWithTwo(2);
         calculator.add(1, 3);
+        calculator.multiplyWithThree(3);
         calculator.addThreeIntegers(4, 5, 7);
     }
 }
