@@ -1,7 +1,7 @@
 package common;
 
-import cglib_impl.CalculatorWithOutIface;
-import jdk_proxy_impl.CalculatorWithIface;
+import cglib_impl.CalculatorWithoutI;
+import jdk_proxy_impl.CalculatorWithI;
 import jdk_proxy_impl.ICalculator;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -13,20 +13,24 @@ public class ProxyUtils {
     public static ICalculator createProxyUsingJDK() {
         return (ICalculator) Proxy.newProxyInstance(
                 ICalculator.class.getClassLoader(),
-                CalculatorWithIface.class.getInterfaces(),
+                CalculatorWithI.class.getInterfaces(),
                 (proxy, method, arguments) -> {
-                    System.out.println(LogUtils.createMessage(method, Arrays.asList(arguments)));
-                    return method.invoke(new CalculatorWithIface(), arguments);
+                    if (ReflectionUtils.isMethodPresentedAndAnnotatedWith(CalculatorWithI.class, method, Log.class)) {
+                        System.out.println(LogUtils.createMessage(method, Arrays.asList(arguments)));
+                    }
+                    return method.invoke(new CalculatorWithI(), arguments);
                 }
         );
     }
 
-    public static CalculatorWithOutIface createProxyUsingCglib() {
-        MethodInterceptor handler = (obj, method, args, proxy) -> {
-            System.out.println(LogUtils.createMessage(method, Arrays.asList(args)));
-            return method.invoke(new CalculatorWithOutIface(), args);
+    public static CalculatorWithoutI createProxyUsingCglib() {
+        final MethodInterceptor handler = (obj, method, args, proxy) -> {
+            if (method.isAnnotationPresent(Log.class)) {
+                System.out.println(LogUtils.createMessage(method, Arrays.asList(args)));
+            }
+            return method.invoke(new CalculatorWithoutI(), args);
         };
 
-        return (CalculatorWithOutIface) Enhancer.create(CalculatorWithOutIface.class, handler);
+        return (CalculatorWithoutI) Enhancer.create(CalculatorWithoutI.class, handler);
     }
 }

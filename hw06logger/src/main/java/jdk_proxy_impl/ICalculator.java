@@ -5,5 +5,7 @@ public interface ICalculator {
 
     int multiplyWithTwo(final int a);
 
+    int multiplyWithThree(final int a);
+
     int addThreeIntegers(final int a, final int b, final int c);
 }
