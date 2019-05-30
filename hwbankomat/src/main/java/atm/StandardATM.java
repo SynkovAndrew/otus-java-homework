@@ -4,6 +4,7 @@ import banknote.Banknote;
 import banknote.BanknoteKindEnum;
 import banknote.StandardBanknote;
 import cell.Cell;
+import cell.CellIsEmptyException;
 import cell.CellIsFullException;
 import cell.StandardCell;
 
@@ -11,10 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 
 public class StandardATM implements ATM {
@@ -30,22 +30,29 @@ public class StandardATM implements ATM {
 
     public void put(final Banknote bankNote) throws FailedToPutBanknoteException {
         final var cellToPut = cells.stream()
-                .filter(cell -> cell.getBanknoteKind().equals(bankNote.getValue()))
+                .filter(cell -> cell.getBanknoteKind().equals(bankNote.getKind()))
                 .findFirst()
                 .orElseThrow(() -> new FailedToPutBanknoteException("Internal error. Please contact support."));
 
         try {
             cellToPut.putBanknote(bankNote);
         } catch (CellIsFullException e) {
-            throw new FailedToPutBanknoteException("Bankomat is full.");
+            throw new FailedToPutBanknoteException("ATM is full.");
         }
     }
 
     public List<Banknote> withdraw(final int sum) throws FailedToWithdrawSumException {
+        if (getBalance() < sum) {
+            throw new FailedToWithdrawSumException("Not enough banknotes to withdraw desired sum.");
+        }
+
         final var toWithdraw = new ArrayList<Banknote>();
         int rest = sum;
 
-        for (BanknoteKindEnum kind: BanknoteKindEnum.getReverseSorted()) {
+        for (BanknoteKindEnum kind : BanknoteKindEnum.getReverseSorted()) {
+            if (rest == 0) {
+                break;
+            }
             rest = nextStep(rest, kind, toWithdraw);
         }
 
@@ -56,25 +63,43 @@ public class StandardATM implements ATM {
         return toWithdraw;
     }
 
-    private int nextStep(final int rest,
+    private int nextStep(final int sum,
                          final BanknoteKindEnum banknoteKind,
                          final List<Banknote> banknotes) {
-        final var count = rest / banknoteKind.getValue();
+        final AtomicInteger rest = new AtomicInteger(sum);
+        final var count = sum / banknoteKind.getValue();
 
         if (count > 0) {
-            banknotes.addAll(IntStream.rangeClosed(1, count)
-                    .mapToObj(num -> new StandardBanknote(banknoteKind))
-                    .collect(Collectors.toList()));
+            ofNullable(findCell(banknoteKind))
+                    .ifPresent(cell -> {
+                        for (int i = 0; i < count; i++) {
+                            try {
+                                final Banknote banknote = cell.getBanknote();
+                                rest.set(rest.get() - banknote.getKind().getValue());
 
-            return rest - banknoteKind.getValue() * count;
+                                banknotes.add(banknote);
+                            } catch (CellIsEmptyException e) {
+                                break;
+                            }
+                        }
+                    });
+
+            return rest.get();
         }
 
-        return rest;
+        return sum;
     }
 
     private Set<Cell> constructAtmCells() {
         return Arrays.stream(BanknoteKindEnum.values())
                 .map(kind -> new StandardCell(new StandardBanknote(kind)))
                 .collect(toSet());
+    }
+
+    private Cell findCell(final BanknoteKindEnum banknoteKind) {
+        return cells.stream()
+                .filter(cell -> cell.getBanknoteKind().equals(banknoteKind))
+                .findFirst()
+                .orElse(null);
     }
 }

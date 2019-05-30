@@ -42,12 +42,12 @@ public class AbstractCell implements Cell {
 
     @Override
     public int getContentSum() {
-        return occupancy * banknoteType.getValue().getValue();
+        return occupancy * banknoteType.getKind().getValue();
     }
 
     @Override
     public BanknoteKindEnum getBanknoteKind() {
-        return banknoteType.getValue();
+        return banknoteType.getKind();
     }
 
     @Override

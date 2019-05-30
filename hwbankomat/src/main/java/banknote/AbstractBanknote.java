@@ -3,14 +3,15 @@ package banknote;
 import java.util.Objects;
 
 public abstract class AbstractBanknote implements Banknote {
-    private final BanknoteKindEnum value;
+    private final BanknoteKindEnum kind;
 
-    protected AbstractBanknote(final BanknoteKindEnum value) {
-        this.value = value;
+    protected AbstractBanknote(final BanknoteKindEnum kind) {
+        this.kind = kind;
     }
 
-    public BanknoteKindEnum getValue() {
-        return value;
+    @Override
+    public BanknoteKindEnum getKind() {
+        return kind;
     }
 
     @Override
@@ -18,11 +19,16 @@ public abstract class AbstractBanknote implements Banknote {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractBanknote that = (AbstractBanknote) o;
-        return value == that.value;
+        return kind == that.kind;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value);
+        return Objects.hash(kind);
+    }
+
+    @Override
+    public String toString() {
+        return "\"" + kind.getCode() + "\" Banknote";
     }
 }
