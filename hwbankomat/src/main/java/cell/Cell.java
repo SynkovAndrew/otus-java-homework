@@ -10,5 +10,7 @@ public interface Cell {
 
     int getContentSum();
 
+    int getOccupancy();
+
     BanknoteKindEnum getBanknoteKind();
 }

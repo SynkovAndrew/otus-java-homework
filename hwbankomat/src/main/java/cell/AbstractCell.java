@@ -8,36 +8,41 @@ import java.util.Objects;
 public class AbstractCell implements Cell {
     private final int max;
     private final Banknote banknoteType;
-    private int current;
+    private int occupancy;
 
     public AbstractCell(final Banknote banknoteType,
                         final int max) {
         this.max = max;
         this.banknoteType = banknoteType;
-        this.current = 0;
+        this.occupancy = 0;
+    }
+
+    @Override
+    public int getOccupancy() {
+        return occupancy;
     }
 
     @Override
     public Banknote getBanknote() throws CellIsEmptyException {
-        if (current == 0) {
+        if (occupancy == 0) {
             throw new CellIsEmptyException();
         }
-        current--;
+        occupancy--;
 
         return banknoteType;
     }
 
     @Override
     public void putBanknote(Banknote banknote) throws CellIsFullException {
-        if (current == max) {
+        if (occupancy == max) {
             throw new CellIsFullException();
         }
-        current++;
+        occupancy++;
     }
 
     @Override
     public int getContentSum() {
-        return current * banknoteType.getValue().getValue();
+        return occupancy * banknoteType.getValue().getValue();
     }
 
     @Override
