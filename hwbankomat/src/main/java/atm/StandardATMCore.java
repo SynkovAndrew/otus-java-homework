@@ -17,10 +17,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 
-public class StandardATM implements ATM {
+public class StandardATMCore implements ATMCore {
     private final Set<Cell> cells;
 
-    public StandardATM() {
+    public StandardATMCore() {
         this.cells = constructAtmCells();
     }
 
@@ -37,7 +37,7 @@ public class StandardATM implements ATM {
         try {
             cellToPut.putBanknote(bankNote);
         } catch (CellIsFullException e) {
-            throw new FailedToPutBanknoteException("ATM is full.");
+            throw new FailedToPutBanknoteException("ATMCore is full.");
         }
     }
 

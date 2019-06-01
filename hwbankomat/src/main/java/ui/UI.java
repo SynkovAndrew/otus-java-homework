@@ -1,5 +1,9 @@
 package ui;
 
+import java.util.List;
+
 public interface UI {
-    void run();
+    void showNotification(String message);
+
+    List<String> getNextCommand();
 }

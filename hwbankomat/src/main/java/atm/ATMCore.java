@@ -4,7 +4,7 @@ import banknote.Banknote;
 
 import java.util.List;
 
-public interface ATM {
+public interface ATMCore {
     int getBalance();
 
     void put(Banknote bankNote) throws FailedToPutBanknoteException;
