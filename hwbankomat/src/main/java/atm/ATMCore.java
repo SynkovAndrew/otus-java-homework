@@ -1,13 +1,13 @@
 package atm;
 
-import banknote.Banknote;
+import banknote.BanknoteEnum;
 
 import java.util.List;
 
 public interface ATMCore {
     int getBalance();
 
-    void put(Banknote bankNote) throws FailedToPutBanknoteException;
+    void put(BanknoteEnum banknoteKind) throws FailedToPutBanknoteException;
 
-    List<Banknote> withdraw(int sum) throws FailedToWithdrawSumException;
+    List<BanknoteEnum> withdraw(int sum) throws FailedToWithdrawSumException;
 }

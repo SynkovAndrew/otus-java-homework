@@ -1,8 +1,6 @@
 package atm;
 
-import banknote.Banknote;
-import banknote.BanknoteKindEnum;
-import banknote.StandardBanknote;
+import banknote.BanknoteEnum;
 import cell.Cell;
 import cell.CellIsEmptyException;
 import cell.CellIsFullException;
@@ -28,9 +26,9 @@ public class StandardATMCore implements ATMCore {
         return cells.stream().mapToInt(Cell::getContentSum).sum();
     }
 
-    public void put(final Banknote bankNote) throws FailedToPutBanknoteException {
+    public void put(final BanknoteEnum bankNote) throws FailedToPutBanknoteException {
         final var cellToPut = cells.stream()
-                .filter(cell -> cell.getBanknoteKind().equals(bankNote.getKind()))
+                .filter(cell -> cell.getBanknoteKind().equals(bankNote))
                 .findFirst()
                 .orElseThrow(() -> new FailedToPutBanknoteException("Internal error. Please contact support."));
 
@@ -41,15 +39,15 @@ public class StandardATMCore implements ATMCore {
         }
     }
 
-    public List<Banknote> withdraw(final int sum) throws FailedToWithdrawSumException {
+    public List<BanknoteEnum> withdraw(final int sum) throws FailedToWithdrawSumException {
         if (getBalance() < sum) {
             throw new FailedToWithdrawSumException("Not enough banknotes to withdraw desired sum.");
         }
 
-        final var toWithdraw = new ArrayList<Banknote>();
+        final var toWithdraw = new ArrayList<BanknoteEnum>();
         int rest = sum;
 
-        for (BanknoteKindEnum kind : BanknoteKindEnum.getReverseSorted()) {
+        for (BanknoteEnum kind : BanknoteEnum.getReverseSorted()) {
             if (rest == 0) {
                 break;
             }
@@ -64,18 +62,18 @@ public class StandardATMCore implements ATMCore {
     }
 
     private int nextStep(final int sum,
-                         final BanknoteKindEnum banknoteKind,
-                         final List<Banknote> banknotes) {
+                         final BanknoteEnum banknoteKind,
+                         final List<BanknoteEnum> banknotes) {
         final AtomicInteger rest = new AtomicInteger(sum);
-        final var count = sum / banknoteKind.getValue();
+        final var count = sum / banknoteKind.getNominal();
 
         if (count > 0) {
             ofNullable(findCell(banknoteKind))
                     .ifPresent(cell -> {
                         for (int i = 0; i < count; i++) {
                             try {
-                                final Banknote banknote = cell.getBanknote();
-                                rest.set(rest.get() - banknote.getKind().getValue());
+                                final BanknoteEnum banknote = cell.getBanknote();
+                                rest.set(rest.get() - banknote.getNominal());
 
                                 banknotes.add(banknote);
                             } catch (CellIsEmptyException e) {
@@ -91,12 +89,12 @@ public class StandardATMCore implements ATMCore {
     }
 
     private Set<Cell> constructAtmCells() {
-        return Arrays.stream(BanknoteKindEnum.values())
-                .map(kind -> new StandardCell(new StandardBanknote(kind)))
+        return Arrays.stream(BanknoteEnum.values())
+                .map(StandardCell::new)
                 .collect(toSet());
     }
 
-    private Cell findCell(final BanknoteKindEnum banknoteKind) {
+    private Cell findCell(final BanknoteEnum banknoteKind) {
         return cells.stream()
                 .filter(cell -> cell.getBanknoteKind().equals(banknoteKind))
                 .findFirst()

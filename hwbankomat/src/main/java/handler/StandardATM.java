@@ -1,9 +1,7 @@
 package handler;
 
 import atm.*;
-import banknote.Banknote;
-import banknote.BanknoteKindEnum;
-import banknote.StandardBanknote;
+import banknote.BanknoteEnum;
 import ui.CLI;
 import ui.UI;
 
@@ -61,12 +59,12 @@ public class StandardATM implements ATM {
     }
 
     private void handlePutBanknote(final String banknoteKind) {
-        final BanknoteKindEnum kind = BanknoteKindEnum.findByCode(banknoteKind);
+        final BanknoteEnum kind = BanknoteEnum.findByCode(banknoteKind);
         if (isNull(kind)) {
             ui.showNotification("Error. ATMCore doesn't support such kind of banknote.");
         } else {
             try {
-                atmCore.put(new StandardBanknote(kind));
+                atmCore.put(kind);
                 ui.showNotification("\n\"" + banknoteKind + "\" is put successfully. Balance: " + atmCore.getBalance() + "\n");
             } catch (FailedToPutBanknoteException e) {
                 ui.showNotification(e.getMessage());
@@ -77,10 +75,12 @@ public class StandardATM implements ATM {
 
     private void handleWithdraw(final String sum) {
         try {
-            final List<Banknote> withdraw = atmCore.withdraw(Integer.valueOf(sum));
-            ui.showNotification("\nWithdrew: " + withdraw.stream().map(Banknote::toString).collect(joining(", ")));
-        } catch (FailedToWithdrawSumException e) {
+            final List<BanknoteEnum> withdraw = atmCore.withdraw(Integer.valueOf(sum));
+            ui.showNotification("\nWithdrew: " + withdraw.stream().map(BanknoteEnum::toString).collect(joining(", ")));
+        } catch (FailedToWithdrawSumException  e) {
             ui.showNotification(e.getMessage());
+        } catch (NumberFormatException e) {
+            ui.showNotification("Entered sum is not correct! Use numbers only.");
         }
     }
 

@@ -1,6 +1,4 @@
-import banknote.Banknote;
-import banknote.BanknoteKindEnum;
-import banknote.StandardBanknote;
+import banknote.BanknoteEnum;
 import cell.Cell;
 import cell.CellIsEmptyException;
 import cell.CellIsFullException;
@@ -11,12 +9,11 @@ import org.junit.jupiter.api.Test;
 
 public class StandardCellTest {
     private final int INIT_OCCUPANCY = 20;
-    private Banknote tenBanknote;
+    private BanknoteEnum tenBanknote = BanknoteEnum.TEN;
     private Cell tenCell;
 
     @BeforeEach
     public void beforeEach() throws CellIsFullException {
-        tenBanknote = new StandardBanknote(BanknoteKindEnum.TEN);
         tenCell = new StandardCell(tenBanknote);
         for (int i = 0; i < INIT_OCCUPANCY; i++) {
             tenCell.putBanknote(tenBanknote);
@@ -38,8 +35,8 @@ public class StandardCellTest {
             tenCell.putBanknote(tenBanknote);
             Assertions.assertEquals(INIT_OCCUPANCY + i, tenCell.getOccupancy());
         }
-        final Banknote banknote = tenCell.getBanknote();
-        Assertions.assertEquals(BanknoteKindEnum.TEN, banknote.getKind());
+        final BanknoteEnum banknote = tenCell.getBanknote();
+        Assertions.assertEquals(BanknoteEnum.TEN, banknote);
         Assertions.assertEquals(29, tenCell.getOccupancy());
     }
 
@@ -68,7 +65,7 @@ public class StandardCellTest {
 
     @Test
     public void getBanknoteKind() {
-        Assertions.assertEquals(BanknoteKindEnum.TEN, tenCell.getBanknoteKind());
+        Assertions.assertEquals(BanknoteEnum.TEN, tenCell.getBanknoteKind());
     }
 
     @Test

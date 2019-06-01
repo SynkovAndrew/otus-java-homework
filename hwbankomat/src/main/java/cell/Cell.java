@@ -1,16 +1,15 @@
 package cell;
 
-import banknote.Banknote;
-import banknote.BanknoteKindEnum;
+import banknote.BanknoteEnum;
 
 public interface Cell {
-    Banknote getBanknote() throws CellIsEmptyException;
+    BanknoteEnum getBanknote() throws CellIsEmptyException;
 
-    void putBanknote(Banknote banknote) throws CellIsFullException;
+    void putBanknote(BanknoteEnum banknote) throws CellIsFullException;
 
     int getContentSum();
 
     int getOccupancy();
 
-    BanknoteKindEnum getBanknoteKind();
+    BanknoteEnum getBanknoteKind();
 }

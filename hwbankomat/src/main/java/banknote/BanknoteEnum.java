@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public enum BanknoteKindEnum {
+public enum BanknoteEnum {
     TEN("TEN", 10),
     FIFTY("FIFTY", 50),
     ONE_HUNDRED("ONE_HUNDRED", 100),
@@ -14,32 +14,40 @@ public enum BanknoteKindEnum {
     ONE_THOUSAND("ONE_THOUSAND", 1000),
     FIVE_THOUSAND("FIVE_THOUSAND", 5000);
 
-    private final int value;
+    private final int nominal;
     private final String code;
 
-    BanknoteKindEnum(final String code, final int value) {
-        this.value = value;
+    BanknoteEnum(final String code, final int nominal) {
+        this.nominal = nominal;
         this.code = code;
     }
 
-    public int getValue() {
-        return value;
+    public int getNominal() {
+        return nominal;
     }
 
     public String getCode() {
         return code;
     }
 
-    public static BanknoteKindEnum findByCode(final String code) {
-        return Stream.of(BanknoteKindEnum.values())
+    public static BanknoteEnum findByCode(final String code) {
+        return Stream.of(BanknoteEnum.values())
                 .filter(kind -> kind.getCode().equals(code))
                 .findFirst()
                 .orElse(null);
     }
 
-    public static Set<BanknoteKindEnum> getReverseSorted() {
-        return Stream.of(BanknoteKindEnum.values())
-                .sorted((o1, o2) -> Integer.compare(o2.getValue(), o1.getValue()))
+    @Override
+    public String toString() {
+        return "Banknote {" +
+                "nominal=" + nominal +
+                ", code='" + code + '\'' +
+                '}';
+    }
+
+    public static Set<BanknoteEnum> getReverseSorted() {
+        return Stream.of(BanknoteEnum.values())
+                .sorted((o1, o2) -> Integer.compare(o2.getNominal(), o1.getNominal()))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

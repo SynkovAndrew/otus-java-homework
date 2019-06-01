@@ -1,19 +1,18 @@
 package cell;
 
-import banknote.Banknote;
-import banknote.BanknoteKindEnum;
+import banknote.BanknoteEnum;
 
 import java.util.Objects;
 
 public class AbstractCell implements Cell {
     private final int max;
-    private final Banknote banknoteType;
+    private final BanknoteEnum banknoteKind;
     private int occupancy;
 
-    public AbstractCell(final Banknote banknoteType,
+    public AbstractCell(final BanknoteEnum banknoteKind,
                         final int max) {
         this.max = max;
-        this.banknoteType = banknoteType;
+        this.banknoteKind = banknoteKind;
         this.occupancy = 0;
     }
 
@@ -23,17 +22,17 @@ public class AbstractCell implements Cell {
     }
 
     @Override
-    public Banknote getBanknote() throws CellIsEmptyException {
+    public BanknoteEnum getBanknote() throws CellIsEmptyException {
         if (occupancy == 0) {
             throw new CellIsEmptyException();
         }
         occupancy--;
 
-        return banknoteType;
+        return banknoteKind;
     }
 
     @Override
-    public void putBanknote(Banknote banknote) throws CellIsFullException {
+    public void putBanknote(BanknoteEnum banknote) throws CellIsFullException {
         if (occupancy == max) {
             throw new CellIsFullException();
         }
@@ -42,12 +41,12 @@ public class AbstractCell implements Cell {
 
     @Override
     public int getContentSum() {
-        return occupancy * banknoteType.getKind().getValue();
+        return occupancy * banknoteKind.getNominal();
     }
 
     @Override
-    public BanknoteKindEnum getBanknoteKind() {
-        return banknoteType.getKind();
+    public BanknoteEnum getBanknoteKind() {
+        return banknoteKind;
     }
 
     @Override
@@ -55,11 +54,11 @@ public class AbstractCell implements Cell {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractCell that = (AbstractCell) o;
-        return banknoteType == that.banknoteType;
+        return banknoteKind == that.banknoteKind;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(banknoteType);
+        return Objects.hash(banknoteKind);
     }
 }
