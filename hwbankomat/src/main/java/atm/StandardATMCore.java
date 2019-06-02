@@ -9,36 +9,45 @@ import cell.StandardCell;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toMap;
 
 public class StandardATMCore implements ATMCore {
-    private final Set<Cell> cells;
+    private final Map<BanknoteEnum, Cell> cells;
 
     public StandardATMCore() {
         this.cells = constructAtmCells();
     }
 
+    @Override
     public int getBalance() {
-        return cells.stream().mapToInt(Cell::getContentSum).sum();
+        return cells.values().stream().mapToInt(Cell::getContentSum).sum();
     }
 
-    public void put(final BanknoteEnum bankNote) throws FailedToPutBanknoteException {
-        final var cellToPut = cells.stream()
-                .filter(cell -> cell.getBanknoteKind().equals(bankNote))
-                .findFirst()
-                .orElseThrow(() -> new FailedToPutBanknoteException("Internal error. Please contact support."));
+    @Override
+    public void put(final BanknoteEnum banknote) throws FailedToPutBanknoteException {
+        put(banknote, 1L);
+    }
 
-        try {
-            cellToPut.putBanknote(bankNote);
-        } catch (CellIsFullException e) {
-            throw new FailedToPutBanknoteException("ATMCore is full.");
+    @Override
+    public void putMultiple(final List<BanknoteEnum> banknotes) throws FailedToPutBanknoteException {
+        final Map<BanknoteEnum, Long> banknoteFrequency = banknotes.stream()
+                .distinct()
+                .collect(toMap(
+                        Function.identity(),
+                        banknote -> banknotes.stream().filter(bn -> bn.equals(banknote)).count()
+                ));
+
+        for (var entry : banknoteFrequency.entrySet()) {
+            put(entry.getKey(), entry.getValue());
         }
     }
 
+    @Override
     public List<BanknoteEnum> withdraw(final int sum) throws FailedToWithdrawSumException {
         if (getBalance() < sum) {
             throw new FailedToWithdrawSumException("Not enough banknotes to withdraw desired sum.");
@@ -61,18 +70,30 @@ public class StandardATMCore implements ATMCore {
         return toWithdraw;
     }
 
+    private void put(final BanknoteEnum banknote, final long banknoteCount) throws FailedToPutBanknoteException {
+        final var cellToPut = ofNullable(cells.get(banknote))
+                .orElseThrow(() -> new FailedToPutBanknoteException("Internal error. Please contact support."));
+        try {
+            for (int i = 0; i < banknoteCount; i++) {
+                cellToPut.putBanknote(banknote);
+            }
+        } catch (CellIsFullException e) {
+            throw new FailedToPutBanknoteException("ATM is full.");
+        }
+    }
+
     private int nextStep(final int sum,
                          final BanknoteEnum banknoteKind,
                          final List<BanknoteEnum> banknotes) {
-        final AtomicInteger rest = new AtomicInteger(sum);
+        final var rest = new AtomicInteger(sum);
         final var count = sum / banknoteKind.getNominal();
 
         if (count > 0) {
-            ofNullable(findCell(banknoteKind))
+            ofNullable(cells.get(banknoteKind))
                     .ifPresent(cell -> {
                         for (int i = 0; i < count; i++) {
                             try {
-                                final BanknoteEnum banknote = cell.getBanknote();
+                                final BanknoteEnum banknote = cell.withdrawBanknote();
                                 rest.set(rest.get() - banknote.getNominal());
 
                                 banknotes.add(banknote);
@@ -88,16 +109,8 @@ public class StandardATMCore implements ATMCore {
         return sum;
     }
 
-    private Set<Cell> constructAtmCells() {
+    private Map<BanknoteEnum, Cell> constructAtmCells() {
         return Arrays.stream(BanknoteEnum.values())
-                .map(StandardCell::new)
-                .collect(toSet());
-    }
-
-    private Cell findCell(final BanknoteEnum banknoteKind) {
-        return cells.stream()
-                .filter(cell -> cell.getBanknoteKind().equals(banknoteKind))
-                .findFirst()
-                .orElse(null);
+                .collect(toMap(Function.identity(), StandardCell::new));
     }
 }

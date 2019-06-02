@@ -3,7 +3,7 @@ package cell;
 import banknote.BanknoteEnum;
 
 public interface Cell {
-    BanknoteEnum getBanknote() throws CellIsEmptyException;
+    BanknoteEnum withdrawBanknote() throws CellIsEmptyException;
 
     void putBanknote(BanknoteEnum banknote) throws CellIsFullException;
 
@@ -12,4 +12,6 @@ public interface Cell {
     int getOccupancy();
 
     BanknoteEnum getBanknoteKind();
+
+    boolean isEmpty();
 }

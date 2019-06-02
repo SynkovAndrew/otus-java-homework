@@ -22,7 +22,12 @@ public class AbstractCell implements Cell {
     }
 
     @Override
-    public BanknoteEnum getBanknote() throws CellIsEmptyException {
+    public boolean isEmpty() {
+        return occupancy == 0;
+    }
+
+    @Override
+    public BanknoteEnum withdrawBanknote() throws CellIsEmptyException {
         if (occupancy == 0) {
             throw new CellIsEmptyException();
         }

@@ -6,6 +6,8 @@ import ui.CLI;
 import ui.UI;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static atm.CommandEnum.*;
 import static java.util.Objects.isNull;
@@ -37,6 +39,9 @@ public class StandardATM implements ATM {
                 case PUT:
                     handlePutBanknote(nextCommand.get(1));
                     break;
+                case PUT_MULTIPLE:
+                    handlePutMultipleBanknotes(nextCommand.subList(1, nextCommand.size()));
+                    break;
                 case WITHDRAW:
                     handleWithdraw(nextCommand.get(1));
                     break;
@@ -58,14 +63,33 @@ public class StandardATM implements ATM {
         ui.showNotification("\nError. No such command.\n");
     }
 
-    private void handlePutBanknote(final String banknoteKind) {
-        final BanknoteEnum kind = BanknoteEnum.findByCode(banknoteKind);
+    private void handlePutBanknote(final String banknote) {
+        final BanknoteEnum kind = BanknoteEnum.findByCode(banknote);
         if (isNull(kind)) {
-            ui.showNotification("Error. ATMCore doesn't support such kind of banknote.");
+            ui.showNotification("Error. ATM doesn't support such kind of banknote.");
         } else {
             try {
                 atmCore.put(kind);
-                ui.showNotification("\n\"" + banknoteKind + "\" is put successfully. Balance: " + atmCore.getBalance() + "\n");
+                ui.showNotification("\n\"" + banknote + "\" has been put successfully. Balance: " + atmCore.getBalance() + "\n");
+            } catch (FailedToPutBanknoteException e) {
+                ui.showNotification(e.getMessage());
+            }
+        }
+
+    }
+
+    private void handlePutMultipleBanknotes(final List<String> banknotes) {
+        final var toPut = banknotes.stream()
+                .map(BanknoteEnum::findByCode)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (toPut.isEmpty()) {
+            ui.showNotification("Error. ATM doesn't support such kind of banknote.");
+        } else {
+            try {
+                atmCore.putMultiple(toPut);
+                ui.showNotification("\nAll banknotes have been put successfully. Balance: " + atmCore.getBalance() + "\n");
             } catch (FailedToPutBanknoteException e) {
                 ui.showNotification(e.getMessage());
             }
@@ -93,6 +117,7 @@ public class StandardATM implements ATM {
         return "Enter one of the following options: \n\n" +
                 BALANCE + " \n" +
                 PUT + " {TEN, FIFTY, ONE_HUNDRED, TWO_HUNDRED, FIVE_HUNDRED, ONE_THOUSAND, FIVE_THOUSAND} \n" +
+                PUT_MULTIPLE + " {TEN, FIFTY, ONE_HUNDRED, TWO_HUNDRED, FIVE_HUNDRED, ONE_THOUSAND, FIVE_THOUSAND} \n" +
                 WITHDRAW + " {number} \n" +
                 EXIT + " \n";
     }

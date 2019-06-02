@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -37,6 +38,15 @@ public class StandardATMCoreTest {
         atmCore.put(BanknoteEnum.FIVE_THOUSAND);
         atmCore.put(BanknoteEnum.FIVE_THOUSAND);
         Assertions.assertEquals(10270, atmCore.getBalance());
+    }
+
+    @Test
+    public void putMultipleBanknoteTest() throws FailedToPutBanknoteException {
+        Assertions.assertEquals(0, atmCore.getBalance());
+        final var banknotes = newArrayList(BanknoteEnum.TEN, BanknoteEnum.TEN, BanknoteEnum.FIFTY, BanknoteEnum.FIFTY, BanknoteEnum.FIFTY,
+                BanknoteEnum.ONE_HUNDRED, BanknoteEnum.ONE_HUNDRED, BanknoteEnum.ONE_HUNDRED, BanknoteEnum.FIVE_THOUSAND);
+        atmCore.putMultiple(banknotes);
+        Assertions.assertEquals(5470, atmCore.getBalance());
     }
 
     @Test

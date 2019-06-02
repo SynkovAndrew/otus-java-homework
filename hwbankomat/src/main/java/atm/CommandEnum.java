@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 public enum CommandEnum {
     BALANCE("BALANCE"),
     PUT("PUT"),
+    PUT_MULTIPLE("PUT_MULTIPLE"),
     WITHDRAW("WITHDRAW"),
     EXIT("EXIT"),
     NO_SUCH_COMMAND("NO_SUCH_COMMAND");

@@ -23,10 +23,11 @@ public class StandardCellTest {
     @Test
     public void getBanknote_emptyCell() throws CellIsEmptyException {
         for (int i = 1; i <= INIT_OCCUPANCY; i++) {
-            tenCell.getBanknote();
+            tenCell.withdrawBanknote();
             Assertions.assertEquals(INIT_OCCUPANCY - i, tenCell.getOccupancy());
         }
-        Assertions.assertThrows(CellIsEmptyException.class, () -> tenCell.getBanknote());
+        Assertions.assertTrue(tenCell.isEmpty());
+        Assertions.assertThrows(CellIsEmptyException.class, () -> tenCell.withdrawBanknote());
     }
 
     @Test
@@ -35,7 +36,7 @@ public class StandardCellTest {
             tenCell.putBanknote(tenBanknote);
             Assertions.assertEquals(INIT_OCCUPANCY + i, tenCell.getOccupancy());
         }
-        final BanknoteEnum banknote = tenCell.getBanknote();
+        final BanknoteEnum banknote = tenCell.withdrawBanknote();
         Assertions.assertEquals(BanknoteEnum.TEN, banknote);
         Assertions.assertEquals(29, tenCell.getOccupancy());
     }
@@ -44,6 +45,7 @@ public class StandardCellTest {
     public void putBanknote() throws CellIsFullException {
         for (int i = 1; i < +15; i++) {
             tenCell.putBanknote(tenBanknote);
+            Assertions.assertFalse(tenCell.isEmpty());
             Assertions.assertEquals(INIT_OCCUPANCY + i, tenCell.getOccupancy());
         }
     }
