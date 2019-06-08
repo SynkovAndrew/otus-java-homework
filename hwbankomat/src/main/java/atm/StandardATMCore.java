@@ -5,6 +5,7 @@ import cell.Cell;
 import cell.CellIsEmptyException;
 import cell.CellIsFullException;
 import cell.StandardCell;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +35,7 @@ public class StandardATMCore implements ATMCore {
 
     @Override
     public void put(final BanknoteEnum banknote) throws FailedToPutBanknoteException {
-        put(banknote, 1L);
+        put(ImmutableMap.of(banknote, 1L));
     }
 
     @Override
@@ -45,10 +46,7 @@ public class StandardATMCore implements ATMCore {
                         Function.identity(),
                         banknote -> banknotes.stream().filter(bn -> bn.equals(banknote)).count()
                 ));
-
-        for (var entry : banknoteFrequency.entrySet()) {
-            put(entry.getKey(), entry.getValue());
-        }
+        put(banknoteFrequency);
     }
 
     @Override
@@ -56,41 +54,54 @@ public class StandardATMCore implements ATMCore {
         if (getBalance() < sum) {
             throw new FailedToWithdrawSumException("Not enough banknotes to withdraw desired sum.");
         }
-        this.previousState.setState(currentState);
-
+        rememberState();
         final var toWithdraw = new ArrayList<BanknoteEnum>();
         int rest = sum;
-
         for (BanknoteEnum kind : BanknoteEnum.getReverseSorted()) {
             if (rest == 0) {
                 break;
             }
-            rest = nextStep(rest, kind, toWithdraw);
+            rest = processRestNextDigit(rest, kind, toWithdraw);
         }
-
         if (rest != 0) {
-            this.currentState.setState(previousState);
+            rollbackState();
             throw new FailedToWithdrawSumException("Not enough banknotes to withdraw desired sum.");
         }
-
         return toWithdraw;
     }
 
-    private void put(final BanknoteEnum banknote, final long banknoteCount) throws FailedToPutBanknoteException {
-        final var cellToPut = ofNullable(currentState.getCells().get(banknote))
-                .orElseThrow(() -> new FailedToPutBanknoteException("Internal error. Please contact support."));
-        try {
-            for (int i = 0; i < banknoteCount; i++) {
-                cellToPut.putBanknote(banknote);
+    @Override
+    public void restoreInitialState() {
+        this.currentState.setState(initialState);
+    }
+
+    private void put(final Map<BanknoteEnum, Long> banknoteFrequency) throws FailedToPutBanknoteException {
+        rememberState();
+        for (var entry : banknoteFrequency.entrySet()) {
+            final var cellToPut = ofNullable(currentState.getCells().get(entry.getKey()))
+                    .orElseThrow(() -> new FailedToPutBanknoteException("Internal error. Please contact support."));
+            try {
+                for (int i = 0; i < entry.getValue(); i++) {
+                    cellToPut.putBanknote(entry.getKey());
+                }
+            } catch (CellIsFullException e) {
+                rollbackState();
+                throw new FailedToPutBanknoteException("ATM is full.");
             }
-        } catch (CellIsFullException e) {
-            throw new FailedToPutBanknoteException("ATM is full.");
         }
     }
 
-    private int nextStep(final int sum,
-                         final BanknoteEnum banknoteKind,
-                         final List<BanknoteEnum> banknotes) {
+    private void rememberState() {
+        this.previousState.setState(currentState);
+    }
+
+    private void rollbackState() {
+        this.currentState.setState(previousState);
+    }
+
+    private int processRestNextDigit(final int sum,
+                                     final BanknoteEnum banknoteKind,
+                                     final List<BanknoteEnum> banknotes) {
         final var rest = new AtomicInteger(sum);
         final var count = sum / banknoteKind.getNominal();
 

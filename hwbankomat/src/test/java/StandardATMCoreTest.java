@@ -134,6 +134,22 @@ public class StandardATMCoreTest {
     public void putTest_isFull() throws FailedToPutBanknoteException {
         fulfillATM(MAX_NUMBER_OF_BANKNOTES, newArrayList(BanknoteEnum.TEN));
         Assertions.assertThrows(FailedToPutBanknoteException.class, () -> atmCore.put(BanknoteEnum.TEN));
+
+    }
+
+    @Test
+    public void putMultipleTest_isFull() throws FailedToPutBanknoteException {
+        fulfillATM(MAX_NUMBER_OF_BANKNOTES - 1, newArrayList(BanknoteEnum.TEN));
+        Assertions.assertThrows(FailedToPutBanknoteException.class, () -> atmCore.putMultiple(
+                newArrayList(BanknoteEnum.FIVE_THOUSAND, BanknoteEnum.ONE_THOUSAND, BanknoteEnum.TEN, BanknoteEnum.TEN)));
+        Assertions.assertEquals((MAX_NUMBER_OF_BANKNOTES - 1) * BanknoteEnum.TEN.getNominal(), atmCore.getBalance());
+    }
+
+    @Test
+    public void restoreInitState() throws FailedToPutBanknoteException {
+        fulfillATM(20, newArrayList(BanknoteEnum.TEN, BanknoteEnum.TWO_HUNDRED, BanknoteEnum.FIVE_THOUSAND));
+        atmCore.restoreInitialState();
+        Assertions.assertEquals(0, atmCore.getBalance());
     }
 
     private void fulfillATM(final int number, final List<BanknoteEnum> banknotes) throws FailedToPutBanknoteException {

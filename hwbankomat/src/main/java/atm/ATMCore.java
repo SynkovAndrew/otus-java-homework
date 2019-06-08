@@ -12,4 +12,6 @@ public interface ATMCore {
     void putMultiple(List<BanknoteEnum> banknotes) throws FailedToPutBanknoteException;
 
     List<BanknoteEnum> withdraw(int sum) throws FailedToWithdrawSumException;
+
+    void restoreInitialState();
 }
