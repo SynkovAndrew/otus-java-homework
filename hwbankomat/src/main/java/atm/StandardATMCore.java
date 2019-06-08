@@ -17,15 +17,19 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 public class StandardATMCore implements ATMCore {
-    private final Map<BanknoteEnum, Cell> cells;
+    private final State currentState;
+    private final State initialState;
+    private final State previousState;
 
     public StandardATMCore() {
-        this.cells = constructAtmCells();
+        this.initialState = new State(constructAtmCells());
+        this.currentState = new State(constructAtmCells());
+        this.previousState = new State(constructAtmCells());
     }
 
     @Override
     public int getBalance() {
-        return cells.values().stream().mapToInt(Cell::getContentSum).sum();
+        return currentState.getCells().values().stream().mapToInt(Cell::getContentSum).sum();
     }
 
     @Override
@@ -52,6 +56,7 @@ public class StandardATMCore implements ATMCore {
         if (getBalance() < sum) {
             throw new FailedToWithdrawSumException("Not enough banknotes to withdraw desired sum.");
         }
+        this.previousState.setState(currentState);
 
         final var toWithdraw = new ArrayList<BanknoteEnum>();
         int rest = sum;
@@ -64,6 +69,7 @@ public class StandardATMCore implements ATMCore {
         }
 
         if (rest != 0) {
+            this.currentState.setState(previousState);
             throw new FailedToWithdrawSumException("Not enough banknotes to withdraw desired sum.");
         }
 
@@ -71,7 +77,7 @@ public class StandardATMCore implements ATMCore {
     }
 
     private void put(final BanknoteEnum banknote, final long banknoteCount) throws FailedToPutBanknoteException {
-        final var cellToPut = ofNullable(cells.get(banknote))
+        final var cellToPut = ofNullable(currentState.getCells().get(banknote))
                 .orElseThrow(() -> new FailedToPutBanknoteException("Internal error. Please contact support."));
         try {
             for (int i = 0; i < banknoteCount; i++) {
@@ -89,7 +95,7 @@ public class StandardATMCore implements ATMCore {
         final var count = sum / banknoteKind.getNominal();
 
         if (count > 0) {
-            ofNullable(cells.get(banknoteKind))
+            ofNullable(currentState.getCells().get(banknoteKind))
                     .ifPresent(cell -> {
                         for (int i = 0; i < count; i++) {
                             try {
@@ -112,5 +118,23 @@ public class StandardATMCore implements ATMCore {
     private Map<BanknoteEnum, Cell> constructAtmCells() {
         return Arrays.stream(BanknoteEnum.values())
                 .collect(toMap(Function.identity(), StandardCell::new));
+    }
+
+    private static class State {
+        private final Map<BanknoteEnum, Cell> cells;
+
+        private State(final Map<BanknoteEnum, Cell> cells) {
+            this.cells = cells;
+        }
+
+        private Map<BanknoteEnum, Cell> getCells() {
+            return cells;
+        }
+
+        private void setState(final State state) {
+            state.getCells().entrySet().stream()
+                    .collect(toMap(Map.Entry::getKey, e -> e.getValue().copy()))
+                    .forEach(cells::put);
+        }
     }
 }

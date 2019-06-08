@@ -56,9 +56,19 @@ public class StandardATMCoreTest {
     }
 
     @Test
+    public void withdrawTest_not_enough_money() throws FailedToPutBanknoteException {
+        fulfillATM(10, newArrayList(BanknoteEnum.FIVE_THOUSAND));
+        Assertions.assertThrows(FailedToWithdrawSumException.class, () -> atmCore.withdraw(40050));
+        Assertions.assertEquals(50000, atmCore.getBalance());
+
+    }
+
+    @Test
     public void withdrawTest_failed_sum_too_small() throws FailedToPutBanknoteException {
         fulfillATM(5, newArrayList(BanknoteEnum.TWO_HUNDRED));
         Assertions.assertThrows(FailedToWithdrawSumException.class, () -> atmCore.withdraw(2));
+        Assertions.assertEquals(1000, atmCore.getBalance());
+
     }
 
     @Test

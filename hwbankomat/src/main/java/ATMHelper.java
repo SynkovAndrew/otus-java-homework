@@ -1,5 +1,6 @@
 import atm.ATMCore;
 import atm.FailedToPutBanknoteException;
+import atm.StandardATMCore;
 import banknote.BanknoteEnum;
 
 public class ATMHelper {
