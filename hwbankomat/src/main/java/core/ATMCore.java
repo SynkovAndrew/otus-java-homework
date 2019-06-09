@@ -1,4 +1,4 @@
-package atm;
+package core;
 
 import banknote.BanknoteEnum;
 

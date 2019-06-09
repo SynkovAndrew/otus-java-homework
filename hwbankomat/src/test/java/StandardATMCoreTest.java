@@ -1,11 +1,10 @@
-import atm.ATMCore;
-import atm.FailedToPutBanknoteException;
-import atm.FailedToWithdrawSumException;
-import atm.StandardATMCore;
+import core.ATMCore;
+import core.FailedToPutBanknoteException;
+import core.FailedToWithdrawSumException;
+import core.StandardATMCore;
 import banknote.BanknoteEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -146,10 +145,19 @@ public class StandardATMCoreTest {
     }
 
     @Test
-    public void restoreInitState() throws FailedToPutBanknoteException {
+    public void restoreInitState_empty() throws FailedToPutBanknoteException {
         fulfillATM(20, newArrayList(BanknoteEnum.TEN, BanknoteEnum.TWO_HUNDRED, BanknoteEnum.FIVE_THOUSAND));
         atmCore.restoreInitialState();
         Assertions.assertEquals(0, atmCore.getBalance());
+    }
+
+    @Test
+    public void restoreInitState() throws FailedToPutBanknoteException {
+        final ATMCore atmCore = new StandardATMCore(20);
+        atmCore.putMultiple(newArrayList(BanknoteEnum.TEN, BanknoteEnum.TWO_HUNDRED, BanknoteEnum.FIVE_THOUSAND));
+        Assertions.assertEquals(142410, atmCore.getBalance());
+        atmCore.restoreInitialState();
+        Assertions.assertEquals(137200, atmCore.getBalance());
     }
 
     private void fulfillATM(final int number, final List<BanknoteEnum> banknotes) throws FailedToPutBanknoteException {

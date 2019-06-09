@@ -16,7 +16,7 @@ public class StandardCell implements Cell {
         this.occupancy = 0;
     }
 
-    private StandardCell(final BanknoteEnum banknoteKind, final int occupancy) {
+    public StandardCell(final BanknoteEnum banknoteKind, final int occupancy) {
         this.max = STANDARD_MAX;
         this.banknoteKind = banknoteKind;
         this.occupancy = occupancy;

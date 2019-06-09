@@ -1,4 +1,4 @@
-package atm;
+package core;
 
 import banknote.BanknoteEnum;
 import cell.Cell;
@@ -23,9 +23,15 @@ public class StandardATMCore implements ATMCore {
     private final State previousState;
 
     public StandardATMCore() {
-        this.initialState = new State(constructAtmCells());
-        this.currentState = new State(constructAtmCells());
-        this.previousState = new State(constructAtmCells());
+        this.initialState = new State(constructAtmCells(0));
+        this.currentState = new State(constructAtmCells(0));
+        this.previousState = new State(constructAtmCells(0));
+    }
+
+    public StandardATMCore(final int cellOccupancy) {
+        this.initialState = new State(constructAtmCells(cellOccupancy));
+        this.currentState = new State(constructAtmCells(cellOccupancy));
+        this.previousState = new State(constructAtmCells(cellOccupancy));
     }
 
     @Override
@@ -126,9 +132,9 @@ public class StandardATMCore implements ATMCore {
         return sum;
     }
 
-    private Map<BanknoteEnum, Cell> constructAtmCells() {
+    private Map<BanknoteEnum, Cell> constructAtmCells(final int occupancy) {
         return Arrays.stream(BanknoteEnum.values())
-                .collect(toMap(Function.identity(), StandardCell::new));
+                .collect(toMap(Function.identity(), banknoteKind -> new StandardCell(banknoteKind, occupancy)));
     }
 
     private static class State {
