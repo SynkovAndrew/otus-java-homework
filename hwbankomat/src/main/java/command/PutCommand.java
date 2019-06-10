@@ -9,12 +9,14 @@ import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 
 public class PutCommand extends AbstractCommand implements Command {
+    private final ATMCore atmCore;
     private final String banknote;
 
     public PutCommand(final UI ui,
                       final ATMCore atmCore,
                       final String banknote) {
-        super(ui, atmCore);
+        super(ui);
+        this.atmCore = atmCore;
         this.banknote = banknote;
     }
 

@@ -12,12 +12,14 @@ import static java.util.stream.Collectors.joining;
 
 public class WithdrawCommand extends AbstractCommand implements Command {
     private final String sum;
+    private final ATMCore atmCore;
 
     public WithdrawCommand(final UI ui,
                            final ATMCore atmCore,
                            final String sum) {
-        super(ui, atmCore);
+        super(ui);
         this.sum = sum;
+        this.atmCore = atmCore;
     }
 
     @Override

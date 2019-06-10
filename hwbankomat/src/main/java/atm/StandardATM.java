@@ -2,63 +2,55 @@ package atm;
 
 import command.*;
 import core.ATMCore;
-import ui.CommandEnum;
 import core.StandardATMCore;
+import ui.AbstractUI;
 import ui.CLI;
-import ui.UI;
+import ui.CommandEnum;
+
+import java.util.List;
 
 import static ui.CommandEnum.*;
 
-public class StandardATM implements ATM {
+public class StandardATM extends AbstractUI implements ATM {
     private final ATMCore atmCore;
-    private final UI ui;
 
     public StandardATM() {
+        super(new CLI());
         this.atmCore = new StandardATMCore();
-        this.ui = new CLI();
     }
 
     public StandardATM(final int initOccupancy) {
+        super(new CLI());
         this.atmCore = new StandardATMCore(initOccupancy);
-        this.ui = new CLI();
     }
 
-    public void startUI() {
-        while (true) {
-            ui.showNotification(getMenuMessage());
-
-            final var nextCommand = ui.getNextCommand();
-
-            if (nextCommand.size() == 0) {
-                continue;
-            }
-
-            switch (CommandEnum.fromCode(nextCommand.get(0))) {
-                case BALANCE:
-                    new ShowBalanceCommand(ui, atmCore)
-                            .execute();
-                    break;
-                case PUT:
-                    new PutCommand(ui, atmCore, nextCommand.get(1))
-                            .execute();
-                    break;
-                case PUT_MULTIPLE:
-                    new PutMultipleCommand(ui, atmCore, nextCommand.subList(1, nextCommand.size()))
-                            .execute();
-                    break;
-                case WITHDRAW:
-                    new WithdrawCommand(ui, atmCore, nextCommand.get(1))
-                            .execute();
-                    break;
-                case EXIT:
-                    new ExitCommand(ui, atmCore)
-                            .execute();
-                    break;
-                case NO_SUCH_COMMAND:
-                    new NoSuchCommandCommand(ui, atmCore)
-                            .execute();
-                    break;
-            }
+    @Override
+    protected void runCommand(final List<String> command) {
+        switch (CommandEnum.fromCode(command.get(0))) {
+            case BALANCE:
+                new ShowBalanceCommand(ui, atmCore)
+                        .execute();
+                break;
+            case PUT:
+                new PutCommand(ui, atmCore, command.get(1))
+                        .execute();
+                break;
+            case PUT_MULTIPLE:
+                new PutMultipleCommand(ui, atmCore, command.subList(1, command.size()))
+                        .execute();
+                break;
+            case WITHDRAW:
+                new WithdrawCommand(ui, atmCore, command.get(1))
+                        .execute();
+                break;
+            case EXIT:
+                new ExitCommand(ui)
+                        .execute();
+                break;
+            case NO_SUCH_COMMAND:
+                new NoSuchCommandCommand(ui)
+                        .execute();
+                break;
         }
     }
 
@@ -72,7 +64,8 @@ public class StandardATM implements ATM {
         atmCore.restoreInitialState();
     }
 
-    private String getMenuMessage() {
+    @Override
+    protected String getMenuMessage() {
         return "Enter one of the following options: \n\n" +
                 BALANCE + " \n" +
                 PUT + " {TEN, FIFTY, ONE_HUNDRED, TWO_HUNDRED, FIVE_HUNDRED, ONE_THOUSAND, FIVE_THOUSAND} \n" +

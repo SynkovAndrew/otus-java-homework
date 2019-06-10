@@ -12,12 +12,14 @@ import java.util.stream.Collectors;
 import static java.util.Optional.ofNullable;
 
 public class PutMultipleCommand extends AbstractCommand implements Command {
+    private final ATMCore atmCore;
     private final List<String> banknotes;
 
     public PutMultipleCommand(final UI ui,
                               final ATMCore atmCore,
                               final List<String> banknotes) {
-        super(ui, atmCore);
+        super(ui);
+        this.atmCore = atmCore;
         this.banknotes = banknotes;
     }
 

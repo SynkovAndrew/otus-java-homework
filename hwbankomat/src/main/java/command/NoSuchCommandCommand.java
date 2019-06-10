@@ -1,14 +1,12 @@
 package command;
 
-import core.ATMCore;
 import ui.UI;
 
 import static java.util.Optional.ofNullable;
 
 public class NoSuchCommandCommand extends AbstractCommand implements Command {
-    public NoSuchCommandCommand(final UI ui,
-                                final ATMCore atmCore) {
-        super(ui, atmCore);
+    public NoSuchCommandCommand(final UI ui) {
+        super(ui);
     }
 
     @Override

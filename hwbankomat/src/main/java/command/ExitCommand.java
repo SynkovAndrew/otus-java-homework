@@ -1,15 +1,13 @@
 package command;
 
-import core.ATMCore;
 import ui.UI;
 
 import static java.util.Optional.ofNullable;
 
 public class ExitCommand extends AbstractCommand implements Command {
 
-    public ExitCommand(final UI ui,
-                       final ATMCore atmCore) {
-        super(ui, atmCore);
+    public ExitCommand(final UI ui) {
+        super(ui);
     }
 
     @Override
