@@ -1,11 +1,10 @@
-import atm.ATMCore;
-import atm.FailedToPutBanknoteException;
-import atm.FailedToWithdrawSumException;
-import atm.StandardATMCore;
+import core.ATMCore;
+import core.FailedToPutBanknoteException;
+import core.FailedToWithdrawSumException;
+import core.StandardATMCore;
 import banknote.BanknoteEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -56,9 +55,19 @@ public class StandardATMCoreTest {
     }
 
     @Test
+    public void withdrawTest_not_enough_money() throws FailedToPutBanknoteException {
+        fulfillATM(10, newArrayList(BanknoteEnum.FIVE_THOUSAND));
+        Assertions.assertThrows(FailedToWithdrawSumException.class, () -> atmCore.withdraw(40050));
+        Assertions.assertEquals(50000, atmCore.getBalance());
+
+    }
+
+    @Test
     public void withdrawTest_failed_sum_too_small() throws FailedToPutBanknoteException {
         fulfillATM(5, newArrayList(BanknoteEnum.TWO_HUNDRED));
         Assertions.assertThrows(FailedToWithdrawSumException.class, () -> atmCore.withdraw(2));
+        Assertions.assertEquals(1000, atmCore.getBalance());
+
     }
 
     @Test
@@ -124,6 +133,31 @@ public class StandardATMCoreTest {
     public void putTest_isFull() throws FailedToPutBanknoteException {
         fulfillATM(MAX_NUMBER_OF_BANKNOTES, newArrayList(BanknoteEnum.TEN));
         Assertions.assertThrows(FailedToPutBanknoteException.class, () -> atmCore.put(BanknoteEnum.TEN));
+
+    }
+
+    @Test
+    public void putMultipleTest_isFull() throws FailedToPutBanknoteException {
+        fulfillATM(MAX_NUMBER_OF_BANKNOTES - 1, newArrayList(BanknoteEnum.TEN));
+        Assertions.assertThrows(FailedToPutBanknoteException.class, () -> atmCore.putMultiple(
+                newArrayList(BanknoteEnum.FIVE_THOUSAND, BanknoteEnum.ONE_THOUSAND, BanknoteEnum.TEN, BanknoteEnum.TEN)));
+        Assertions.assertEquals((MAX_NUMBER_OF_BANKNOTES - 1) * BanknoteEnum.TEN.getNominal(), atmCore.getBalance());
+    }
+
+    @Test
+    public void restoreInitState_empty() throws FailedToPutBanknoteException {
+        fulfillATM(20, newArrayList(BanknoteEnum.TEN, BanknoteEnum.TWO_HUNDRED, BanknoteEnum.FIVE_THOUSAND));
+        atmCore.restoreInitialState();
+        Assertions.assertEquals(0, atmCore.getBalance());
+    }
+
+    @Test
+    public void restoreInitState() throws FailedToPutBanknoteException {
+        final ATMCore atmCore = new StandardATMCore(20);
+        atmCore.putMultiple(newArrayList(BanknoteEnum.TEN, BanknoteEnum.TWO_HUNDRED, BanknoteEnum.FIVE_THOUSAND));
+        Assertions.assertEquals(142410, atmCore.getBalance());
+        atmCore.restoreInitialState();
+        Assertions.assertEquals(137200, atmCore.getBalance());
     }
 
     private void fulfillATM(final int number, final List<BanknoteEnum> banknotes) throws FailedToPutBanknoteException {

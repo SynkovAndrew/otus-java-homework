@@ -14,4 +14,6 @@ public interface Cell {
     BanknoteEnum getBanknoteKind();
 
     boolean isEmpty();
+
+    Cell copy();
 }
