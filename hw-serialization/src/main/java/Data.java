@@ -1,3 +1,7 @@
+import java.util.List;
+
+import static com.google.common.collect.Lists.newArrayList;
+
 public class Data {
     private final static int staticInteger = 10;
     private final static String staticString = "staticString";
@@ -7,4 +11,14 @@ public class Data {
     private final long primitiveLongNumber = 30L;
     private final Integer integer = 100;
     private final Long longNumber = 200L;
+    private final int[] primitiveIntArray = new int[] {1, 2, 3, 4, 5};
+    private final Integer[] intArray = new Integer[] {10, 20, 30, 40, 50};
+    private final short[] shortArray = new short[] {1, 2, 3, 4, 5};
+    private final String[] stringArray = new String[] {"abc", "cvf", "asd", "qwe"};
+    private final char[] charArray = new char[] {'a', 'b', 'x', 'g'};
+    private final boolean[] primitiveBooleanArray = new boolean[] {true, false, true};
+    private final Boolean[] booleanArray = new Boolean[] {true, false, true};
+    private final byte[] byteArray = new byte[] {'3', '4', 1, 5, 90};
+    //private final List<String> stringList = newArrayList("lsdf", ";lk;sasad", "sdfavcx");
+    private final List<Double> intList = newArrayList(1.22, 3.55, 2.33);
 }
