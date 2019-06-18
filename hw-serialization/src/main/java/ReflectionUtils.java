@@ -57,11 +57,13 @@ public class ReflectionUtils {
     }
 
     public static boolean isReflectedAsNumberOrBooleanCollection(final Class<?> type, final Type genericType) {
+        final Type[] actualTypeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
         return Collection.class.isAssignableFrom(type) &&
-                NUMBER_AND_BOOLEAN_TYPES.contains((Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0]);
+                NUMBER_AND_BOOLEAN_TYPES.contains(actualTypeArguments[0]);
     }
 
-    public static boolean isReflectedAsStringCollection(final Class<?> type, final Class<?> genericType) {
-        return Collection.class.isAssignableFrom(type) && genericType == String.class;
+    public static boolean isReflectedAsStringCollection(final Class<?> type, final Type genericType) {
+        final Type[] actualTypeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
+        return Collection.class.isAssignableFrom(type) && actualTypeArguments[0] == String.class;
     }
 }

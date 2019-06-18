@@ -1,6 +1,8 @@
 import java.util.List;
+import java.util.Set;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 
 public class Data {
     private final static int staticInteger = 10;
@@ -19,6 +21,6 @@ public class Data {
     private final boolean[] primitiveBooleanArray = new boolean[] {true, false, true};
     private final Boolean[] booleanArray = new Boolean[] {true, false, true};
     private final byte[] byteArray = new byte[] {'3', '4', 1, 5, 90};
-    //private final List<String> stringList = newArrayList("lsdf", ";lk;sasad", "sdfavcx");
-    private final List<Double> intList = newArrayList(1.22, 3.55, 2.33);
+    private final Set<String> stringSet = newHashSet("lsdf", ";lk;sasad", "sdfavcx");
+    private final List<Double> doubleList = newArrayList(1.22, 3.55, 2.33);
 }

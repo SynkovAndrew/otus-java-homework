@@ -2,7 +2,9 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.Collection;
+
+import static java.util.stream.Collectors.joining;
 
 public class SerializationUtils {
     public static String toJson(final Object object) {
@@ -12,7 +14,7 @@ public class SerializationUtils {
                 .filter(field -> !Modifier.isStatic(field.getModifiers()) &&
                         !Modifier.isTransient(field.getModifiers()))
                 .map(field -> fieldToJson(field, object))
-                .collect(Collectors.joining(","));
+                .collect(joining(","));
 
         return "{" + fields + "}";
     }
@@ -27,7 +29,6 @@ public class SerializationUtils {
                     .map(value -> "\"" + field.getName() + "\":" + "\"" + value + "\"")
                     .orElse("");
         } else if (ReflectionUtils.isReflectedAsNumberOrBooleanArray(field.getType())) {
-
             return ReflectionUtils.getFieldValue(field, object)
                     .map(value -> "\"" + field.getName() + "\":" + "[" + getNumberArrayValues(value) + "]")
                     .orElse("");
@@ -36,9 +37,13 @@ public class SerializationUtils {
                     .map(value -> "\"" + field.getName() + "\":" + "[" + getStringArrayValues(value) + "]")
                     .orElse("");
         } else if (ReflectionUtils.isReflectedAsNumberOrBooleanCollection(field.getType(), field.getGenericType())) {
-
-        } else if (ReflectionUtils.isReflectedAsStringCollection(field.getType(), field.getGenericType().getClass())) {
-
+            return ReflectionUtils.getFieldValue(field, object)
+                    .map(value -> "\"" + field.getName() + "\":" + "[" + getNumberCollectionValues(value) + "]")
+                    .orElse("");
+        } else if (ReflectionUtils.isReflectedAsStringCollection(field.getType(), field.getGenericType())) {
+            return ReflectionUtils.getFieldValue(field, object)
+                    .map(value -> "\"" + field.getName() + "\":" + "[" + getStringCollectionValues(value) + "]")
+                    .orElse("");
         }
 
         return "";
@@ -53,6 +58,19 @@ public class SerializationUtils {
             }
         }
         return values.toString();
+    }
+
+    private static String getNumberCollectionValues(final Object collection) {
+        return ((Collection<?>) collection).stream()
+                .map(Object::toString)
+                .collect(joining(","));
+    }
+
+    private static String getStringCollectionValues(final Object collection) {
+        return ((Collection<?>) collection).stream()
+                .map(Object::toString)
+                .map(val -> "\"" + val + "\"")
+                .collect(joining(","));
     }
 
     private static String getStringArrayValues(Object array) {
