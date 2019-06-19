@@ -43,7 +43,7 @@ public class ReflectionUtils {
     }
 
     public static boolean isReflectedAsString(final Class<?> type) {
-        return String.class.isAssignableFrom(type);
+        return String.class.isAssignableFrom(type) || Character.class.isAssignableFrom(type);
     }
 
     public static boolean isReflectedAsNumberOrBooleanArray(final Class<?> type) {
@@ -65,5 +65,19 @@ public class ReflectionUtils {
     public static boolean isReflectedAsStringCollection(final Class<?> type, final Type genericType) {
         final Type[] actualTypeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
         return Collection.class.isAssignableFrom(type) && actualTypeArguments[0] == String.class;
+    }
+
+
+    public static boolean isReflectedAsNumberOrBooleanCollection(final Object object) {
+        final Class<?> type = object.getClass();
+        final var genericType = ((Collection) object).stream().findFirst().map(Object::getClass).orElse(null);
+        return Collection.class.isAssignableFrom(type) &&
+                NUMBER_AND_BOOLEAN_TYPES.contains(genericType);
+    }
+
+    public static boolean isReflectedAsStringCollection(final Object object) {
+        final Class<?> type = object.getClass();
+        final var genericType = ((Collection) object).stream().findFirst().map(Object::getClass).orElse(null);
+        return Collection.class.isAssignableFrom(type) && genericType == String.class;
     }
 }

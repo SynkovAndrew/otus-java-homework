@@ -4,19 +4,41 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 
 public class SerializationUtils {
     public static String toJson(final Object object) {
+        return ofNullable(object)
+                .map(obj -> ofNullable(objectToJson(obj))
+                        .orElseGet(() -> {
+                            final var clazz = object.getClass();
+                            final var fields = Arrays.stream(clazz.getDeclaredFields())
+                                    .filter(field -> !Modifier.isStatic(field.getModifiers()) &&
+                                            !Modifier.isTransient(field.getModifiers()))
+                                    .map(field -> fieldToJson(field, object))
+                                    .collect(joining(","));
+                            return "{" + fields + "}";
+                        }))
+                .orElse("null");
+    }
+
+    private static String objectToJson(final Object object) {
         final var clazz = object.getClass();
-
-        final var fields = Arrays.stream(clazz.getDeclaredFields())
-                .filter(field -> !Modifier.isStatic(field.getModifiers()) &&
-                        !Modifier.isTransient(field.getModifiers()))
-                .map(field -> fieldToJson(field, object))
-                .collect(joining(","));
-
-        return "{" + fields + "}";
+        if (ReflectionUtils.isReflectedAsNumberOrBoolean(clazz)) {
+            return "" + object;
+        } else if (ReflectionUtils.isReflectedAsString(clazz)) {
+            return "\"" + object + "\"";
+        } else if (ReflectionUtils.isReflectedAsNumberOrBooleanArray(clazz)) {
+            return "[" + getNumberArrayValues(object) + "]";
+        } else if (ReflectionUtils.isReflectedAsStringArray(clazz)) {
+            return "[" + getStringArrayValues(object) + "]";
+        } else if (ReflectionUtils.isReflectedAsNumberOrBooleanCollection(object)) {
+            return "[" + getNumberCollectionValues(object) + "]";
+        } else if (ReflectionUtils.isReflectedAsStringCollection(object)) {
+            return "[" + getStringCollectionValues(object) + "]";
+        }
+        return null;
     }
 
     private static String fieldToJson(final Field field, final Object object) {
@@ -45,7 +67,6 @@ public class SerializationUtils {
                     .map(value -> "\"" + field.getName() + "\":" + "[" + getStringCollectionValues(value) + "]")
                     .orElse("");
         }
-
         return "";
     }
 
