@@ -1,3 +1,5 @@
+package ru.otus.homework.utils;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -31,7 +33,7 @@ public class ReflectionUtils {
     public static Optional<Object> getFieldValue(final Field field, final Object o) {
         field.setAccessible(true);
         try {
-            return Optional.of(field.get(o));
+            return Optional.ofNullable(field.get(o));
         } catch (IllegalAccessException ignored) {
             return Optional.empty();
         }
@@ -57,27 +59,33 @@ public class ReflectionUtils {
     }
 
     public static boolean isReflectedAsNumberOrBooleanCollection(final Class<?> type, final Type genericType) {
-        final Type[] actualTypeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
+        final var isCollection = Collection.class.isAssignableFrom(type);
+        final Type[] actualTypeArguments = isCollection ?
+                ((ParameterizedType) genericType).getActualTypeArguments() : new Type[] {null};
         return Collection.class.isAssignableFrom(type) &&
                 NUMBER_AND_BOOLEAN_TYPES.contains(actualTypeArguments[0]);
     }
 
     public static boolean isReflectedAsStringCollection(final Class<?> type, final Type genericType) {
-        final Type[] actualTypeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
+        final var isCollection = Collection.class.isAssignableFrom(type);
+        final Type[] actualTypeArguments = isCollection ?
+                ((ParameterizedType) genericType).getActualTypeArguments() : new Type[] {null};
         return Collection.class.isAssignableFrom(type) && actualTypeArguments[0] == String.class;
     }
 
-
     public static boolean isReflectedAsNumberOrBooleanCollection(final Object object) {
-        final Class<?> type = object.getClass();
-        final var genericType = ((Collection) object).stream().findFirst().map(Object::getClass).orElse(null);
-        return Collection.class.isAssignableFrom(type) &&
-                NUMBER_AND_BOOLEAN_TYPES.contains(genericType);
+        final var type = object.getClass();
+        final var isCollection = Collection.class.isAssignableFrom(type);
+        final var genericType = isCollection ?
+                ((Collection) object).stream().findFirst().map(Object::getClass).orElse(null) : null;
+        return isCollection && NUMBER_AND_BOOLEAN_TYPES.contains(genericType);
     }
 
     public static boolean isReflectedAsStringCollection(final Object object) {
-        final Class<?> type = object.getClass();
-        final var genericType = ((Collection) object).stream().findFirst().map(Object::getClass).orElse(null);
+        final var type = object.getClass();
+        final var isCollection = Collection.class.isAssignableFrom(type);
+        final var genericType = isCollection ?
+                ((Collection) object).stream().findFirst().map(Object::getClass).orElse(null) : null;
         return Collection.class.isAssignableFrom(type) && genericType == String.class;
     }
 }
