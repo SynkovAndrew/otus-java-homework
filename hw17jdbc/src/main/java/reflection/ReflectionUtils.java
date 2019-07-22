@@ -2,6 +2,7 @@ package reflection;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Optional;
 
 public class ReflectionUtils {
@@ -36,5 +37,11 @@ public class ReflectionUtils {
             System.err.println(e.getMessage());
             return Optional.empty();
         }
+    }
+
+    public static Optional<Field> getFieldAnnotatedWith(final Class clazz, final Class annotation) {
+        return Arrays.stream(clazz.getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(annotation))
+                .findFirst();
     }
 }

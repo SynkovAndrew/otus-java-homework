@@ -10,12 +10,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jdbc.SQLUtils.executeUpdate;
+
 public class JdbcTemplateUserTest {
     private JdbcTemplate<User> template;
 
     @BeforeEach
     public void beforeEach() throws SQLException {
         template = new JdbcTemplate<>();
+        executeUpdate(template.getConnection(), InitializeStatement.CREATE_USER_TABLE);
     }
 
     @AfterEach

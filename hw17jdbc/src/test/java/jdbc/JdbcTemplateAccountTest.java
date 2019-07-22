@@ -1,7 +1,6 @@
 package jdbc;
 
 import domain.Account;
-import domain.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,12 +11,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jdbc.SQLUtils.executeUpdate;
+
 public class JdbcTemplateAccountTest {
     private JdbcTemplate<Account> template;
 
     @BeforeEach
     public void beforeEach() throws SQLException {
         template = new JdbcTemplate<>();
+        executeUpdate(template.getConnection(), InitializeStatement.CREATE_ACCOUNT_TABLE);
     }
 
     @AfterEach
@@ -32,8 +34,8 @@ public class JdbcTemplateAccountTest {
         accounts.add(Account.builder().rest(BigDecimal.valueOf(300)).type("USER").build());
 
         final List<Account> expected = new ArrayList<>();
-        expected.add(Account.builder().rest(BigDecimal.valueOf(100)).type("ADMIN").no(1L).build());
-        expected.add(Account.builder().rest(BigDecimal.valueOf(300)).type("USER").no(2L).build());
+        expected.add(Account.builder().rest(BigDecimal.valueOf(100)).type("ADMIN").number(1L).build());
+        expected.add(Account.builder().rest(BigDecimal.valueOf(300)).type("USER").number(2L).build());
 
         accounts.forEach(template::create);
 
@@ -51,8 +53,8 @@ public class JdbcTemplateAccountTest {
         accounts.add(Account.builder().rest(BigDecimal.valueOf(300)).type("ADMIN").build());
 
         final List<Account> expected = new ArrayList<>();
-        expected.add(Account.builder().rest(BigDecimal.valueOf(1000)).type("ADMIN").no(1L).build());
-        expected.add(Account.builder().rest(BigDecimal.valueOf(3000)).type("USER").no(2L).build());
+        expected.add(Account.builder().rest(BigDecimal.valueOf(1000)).type("ADMIN").number(1L).build());
+        expected.add(Account.builder().rest(BigDecimal.valueOf(3000)).type("USER").number(2L).build());
 
         accounts.forEach(template::create);
         expected.forEach(template::update);
@@ -75,7 +77,7 @@ public class JdbcTemplateAccountTest {
         final Account result = template.load(2L, Account.class);
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(Account.builder().rest(BigDecimal.valueOf(300)).type("ADMIN").no(2L).build(), result);
+        Assertions.assertEquals(Account.builder().rest(BigDecimal.valueOf(300)).type("ADMIN").number(2L).build(), result);
     }
 
     @Test
@@ -86,15 +88,15 @@ public class JdbcTemplateAccountTest {
 
         accounts.forEach(template::create);
 
-        template.createOrUpdate(Account.builder().rest(BigDecimal.valueOf(99)).type("ADMIN").no(1L).build());
-        template.createOrUpdate(Account.builder().rest(BigDecimal.valueOf(34)).type("CALLCENTER").no(60L).build());
+        template.createOrUpdate(Account.builder().rest(BigDecimal.valueOf(99)).type("ADMIN").number(1L).build());
+        template.createOrUpdate(Account.builder().rest(BigDecimal.valueOf(34)).type("CALLCENTER").number(60L).build());
 
         final Account admin = template.load(1L, Account.class);
         final Account callcenter = template.load(3L, Account.class);
 
         Assertions.assertNotNull(admin);
-        Assertions.assertEquals(Account.builder().rest(BigDecimal.valueOf(99)).type("ADMIN").no(1L).build(), admin);
+        Assertions.assertEquals(Account.builder().rest(BigDecimal.valueOf(99)).type("ADMIN").number(1L).build(), admin);
         Assertions.assertNotNull(callcenter);
-        Assertions.assertEquals(Account.builder().rest(BigDecimal.valueOf(34)).type("CALLCENTER").no(3L).build(), callcenter);
+        Assertions.assertEquals(Account.builder().rest(BigDecimal.valueOf(34)).type("CALLCENTER").number(3L).build(), callcenter);
     }
 }

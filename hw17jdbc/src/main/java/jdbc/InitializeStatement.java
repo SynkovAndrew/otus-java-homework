@@ -6,7 +6,7 @@ public interface InitializeStatement {
             "name varchar(255)," +
             "age int(3))";
     String CREATE_ACCOUNT_TABLE = "create table if not exists ACCOUNT (" +
-            "no bigint(20) not null auto_increment," +
+            "number bigint(20) not null auto_increment," +
             "type varchar(255)," +
             "rest number)";
 }

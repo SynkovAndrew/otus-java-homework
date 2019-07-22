@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class Account {
     @Id
-    private Long no;
+    private Long number;
     private String type;
     private BigDecimal rest;
 }
