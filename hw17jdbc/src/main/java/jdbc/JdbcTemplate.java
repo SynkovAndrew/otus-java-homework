@@ -4,15 +4,13 @@ import annotation.Id;
 import reflection.ReflectionUtils;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static jdbc.SQLUtils.setObject;
+import static jdbc.SQLUtils.*;
 import static reflection.ReflectionUtils.*;
 
 public class JdbcTemplate<T> implements AutoCloseable {
@@ -26,6 +24,7 @@ public class JdbcTemplate<T> implements AutoCloseable {
     }
 
     public void create(final T object) {
+        final Optional<Savepoint> savepoint = getSavePoint(connection);
         final String insertStatement = SQLCacheUtils.getInsertStatement(object.getClass());
         try (final var preparedStatement = connection.prepareStatement(insertStatement)) {
             final var index = new AtomicInteger(1);
@@ -34,12 +33,15 @@ public class JdbcTemplate<T> implements AutoCloseable {
                     .map(field -> getFieldValue(field, object))
                     .forEach(value -> setObject(preparedStatement, index.getAndIncrement(), value.get()));
             preparedStatement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
+            savepoint.ifPresent(sp -> rollbackSavePoint(connection, sp));
             System.err.println(e.getMessage());
         }
     }
 
     public void update(final T object) {
+        final Optional<Savepoint> savepoint = getSavePoint(connection);
         final String updateStatement = SQLCacheUtils.getUpdateStatement(object.getClass());
         try (final var preparedStatement = connection.prepareStatement(updateStatement)) {
             final var index = new AtomicInteger(1);
@@ -50,7 +52,9 @@ public class JdbcTemplate<T> implements AutoCloseable {
                     .forEach(value -> setObject(preparedStatement, index.getAndIncrement(), value.get()));
             setObject(preparedStatement, index.getAndIncrement(), getFieldValue(idField, object).get());
             preparedStatement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
+            savepoint.ifPresent(sp -> rollbackSavePoint(connection, sp));
             System.err.println(e.getMessage());
         }
     }

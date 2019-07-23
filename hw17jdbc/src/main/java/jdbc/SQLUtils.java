@@ -3,6 +3,10 @@ package jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Savepoint;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 public class SQLUtils {
     public static void setObject(final PreparedStatement preparedStatement, final int index, final Object object) {
@@ -28,6 +32,23 @@ public class SQLUtils {
         } catch (SQLException e) {
             System.err.println(e.getMessage());
             return 0;
+        }
+    }
+
+    public static Optional<Savepoint> getSavePoint(final Connection connection) {
+        try {
+            return ofNullable(connection.setSavepoint());
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public static void rollbackSavePoint(final Connection connection, final Savepoint savepoint) {
+        try {
+            connection.rollback(savepoint);
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
         }
     }
 }
