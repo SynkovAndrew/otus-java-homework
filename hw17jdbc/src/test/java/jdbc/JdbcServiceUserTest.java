@@ -5,25 +5,32 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.DBService;
+import service.DBServiceInterface;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static jdbc.SQLUtils.executeUpdate;
 
-public class JdbcTemplateUserTest {
-    private JdbcTemplate<User> template;
+public class JdbcServiceUserTest {
+    private Connection connection;
+    private DBServiceInterface<User> service;
 
     @BeforeEach
     public void beforeEach() throws SQLException {
-        template = new JdbcTemplate<>();
-        executeUpdate(template.getConnection(), InitializeStatement.CREATE_USER_TABLE);
+        connection = DriverManager.getConnection("jdbc:h2:mem:");
+        connection.setAutoCommit(false);
+        service = new DBService<>(connection);
+        executeUpdate(connection, InitializeStatement.CREATE_USER_TABLE);
     }
 
     @AfterEach
     public void afterEach() throws SQLException {
-        template.close();
+        connection.close();
     }
 
     @Test
@@ -38,9 +45,9 @@ public class JdbcTemplateUserTest {
         expected.add(User.builder().age(21).name("Tony").id(2L).build());
         expected.add(User.builder().age(41).name("John").id(3L).build());
 
-        users.forEach(template::create);
+        users.forEach(service::create);
 
-        final List<User> result = template.loadAll(User.class);
+        final List<User> result = service.loadAll(User.class);
 
         Assertions.assertNotNull(users);
         Assertions.assertEquals(3, users.size());
@@ -59,10 +66,10 @@ public class JdbcTemplateUserTest {
         expected.add(User.builder().age(21).name("Mart").id(2L).build());
         expected.add(User.builder().age(41).name("Cash").id(3L).build());
 
-        users.forEach(template::create);
-        expected.forEach(template::update);
+        users.forEach(service::create);
+        expected.forEach(service::update);
 
-        final List<User> result = template.loadAll(User.class);
+        final List<User> result = service.loadAll(User.class);
 
         Assertions.assertNotNull(users);
         Assertions.assertEquals(3, users.size());
@@ -79,10 +86,10 @@ public class JdbcTemplateUserTest {
         final List<User> expected = new ArrayList<>();
         expected.add(User.builder().age(31).name("Vasili").id(1L).build());
 
-        users.forEach(template::create);
-        expected.forEach(template::update);
+        users.forEach(service::create);
+        expected.forEach(service::update);
 
-        final User result = template.load(2L, User.class);
+        final User result = service.load(2L, User.class);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(User.builder().age(21).name("Tony").id(2L).build(), result);
@@ -95,19 +102,17 @@ public class JdbcTemplateUserTest {
         users.add(User.builder().age(21).name("Tony").build());
         users.add(User.builder().age(41).name("John").build());
 
-        users.forEach(template::create);
+        users.forEach(service::create);
 
-        template.createOrUpdate(User.builder().age(99).name("Dilan").id(1L).build());
-        template.createOrUpdate(User.builder().age(34).name("Dah").id(6L).build());
+        service.createOrUpdate(User.builder().age(99).name("Dilan").id(1L).build());
+        service.createOrUpdate(User.builder().age(34).name("Dah").id(6L).build());
 
-        final User dilan = template.load(1L, User.class);
-        final User dah = template.load(4L, User.class);
+        final User dilan = service.load(1L, User.class);
+        final User dah = service.load(4L, User.class);
 
         Assertions.assertNotNull(dilan);
         Assertions.assertEquals(User.builder().age(99).name("Dilan").id(1L).build(), dilan);
         Assertions.assertNotNull(dah);
         Assertions.assertEquals(User.builder().age(34).name("Dah").id(4L).build(), dah);
     }
-
-
 }

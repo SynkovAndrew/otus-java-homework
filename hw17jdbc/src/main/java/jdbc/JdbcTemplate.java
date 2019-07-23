@@ -4,7 +4,10 @@ import annotation.Id;
 import reflection.ReflectionUtils;
 
 import java.lang.reflect.Field;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,10 +20,9 @@ public class JdbcTemplate<T> implements AutoCloseable {
     private final Connection connection;
     private final SQLCacheUtils SQLCacheUtils;
 
-    public JdbcTemplate() throws SQLException {
-        this.connection = DriverManager.getConnection("jdbc:h2:mem:");
+    public JdbcTemplate(final Connection connection) {
+        this.connection = connection;
         this.SQLCacheUtils = new SQLCacheUtils();
-        connection.setAutoCommit(false);
     }
 
     public void create(final T object) {
@@ -96,10 +98,6 @@ public class JdbcTemplate<T> implements AutoCloseable {
             System.err.println(e.getMessage());
             return null;
         }
-    }
-
-    public Connection getConnection() {
-        return connection;
     }
 
     @Override
