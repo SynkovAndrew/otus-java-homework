@@ -1,6 +1,7 @@
 package jdbc;
 
 import annotation.Id;
+import exception.IdAnnotaionIsNotPresentedException;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -11,7 +12,7 @@ import static java.util.stream.Collectors.joining;
 import static reflection.ReflectionUtils.getFieldAnnotatedWith;
 import static reflection.ReflectionUtils.getFieldName;
 
-public class SQLCacheUtils {
+public class ClassesMetaDataCache {
     private final String INSERT_ONE_STATEMENT = "insert into %s (%s) values (%s)";
     private final String SELECT_ALL_STATEMENT = "select * from %s";
     private final String SELECT_1_STATEMENT = "select 1 from %s where %s = ?";
@@ -25,7 +26,7 @@ public class SQLCacheUtils {
     private Map<String, String> selectOneStatementMap;
     private Map<String, String> checkIfExistsStatementMap;
 
-    public SQLCacheUtils() {
+    public ClassesMetaDataCache() {
         fieldMap = new HashMap<>();
         idFieldMap = new HashMap<>();
         insertStatementMap = new HashMap<>();
@@ -42,7 +43,8 @@ public class SQLCacheUtils {
         final String name = clazz.getSimpleName();
         return ofNullable(checkIfExistsStatementMap.get(name))
                 .orElseGet(() -> {
-                    final String idFieldName = getIdField(clazz).map(Field::getName).get();
+                    final String idFieldName = getIdField(clazz).map(Field::getName)
+                            .orElseThrow(IdAnnotaionIsNotPresentedException::new);
                     final var checkIfExistsStatement = String.format(SELECT_1_STATEMENT, clazz.getSimpleName(), idFieldName);
                     checkIfExistsStatementMap.put(name, checkIfExistsStatement);
                     return checkIfExistsStatement;
@@ -53,7 +55,9 @@ public class SQLCacheUtils {
         final String name = clazz.getSimpleName();
         return ofNullable(selectOneStatementMap.get(name))
                 .orElseGet(() -> {
-                    final String idFieldName = getIdField(clazz).map(Field::getName).get();
+                    final String idFieldName = getIdField(clazz)
+                            .map(Field::getName)
+                            .orElseThrow(IdAnnotaionIsNotPresentedException::new);
                     final var insertStatement = String.format(SELECT_ONE_BY_ID_STATEMENT, name, idFieldName);
                     selectOneStatementMap.put(name, insertStatement);
                     return insertStatement;
@@ -82,7 +86,9 @@ public class SQLCacheUtils {
         final String name = clazz.getSimpleName();
         return ofNullable(updateStatementMap.get(name))
                 .orElseGet(() -> {
-                    final String idFieldName = getIdField(clazz).map(Field::getName).get();
+                    final String idFieldName = getIdField(clazz)
+                            .map(Field::getName)
+                            .orElseThrow(IdAnnotaionIsNotPresentedException::new);
                     final String matches = getFields(clazz).stream()
                             .filter(field -> !field.isAnnotationPresent(Id.class))
                             .map(field -> getFieldName(field) + " = ?")

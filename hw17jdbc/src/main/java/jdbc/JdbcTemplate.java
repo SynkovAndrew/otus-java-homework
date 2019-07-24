@@ -1,7 +1,8 @@
 package jdbc;
 
 import annotation.Id;
-import reflection.ReflectionUtils;
+import exception.IdAnnotaionIsNotPresentedException;
+import exception.IdFieldIsNullException;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -13,24 +14,25 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.util.Collections.emptyList;
 import static jdbc.SQLUtils.*;
 import static reflection.ReflectionUtils.*;
 
 public class JdbcTemplate<T> implements AutoCloseable {
     private final Connection connection;
-    private final SQLCacheUtils SQLCacheUtils;
+    private final ClassesMetaDataCache ClassesMetaDataCache;
 
     public JdbcTemplate(final Connection connection) {
         this.connection = connection;
-        this.SQLCacheUtils = new SQLCacheUtils();
+        this.ClassesMetaDataCache = new ClassesMetaDataCache();
     }
 
     public void create(final T object) {
         final Optional<Savepoint> savepoint = getSavePoint(connection);
-        final String insertStatement = SQLCacheUtils.getInsertStatement(object.getClass());
+        final String insertStatement = ClassesMetaDataCache.getInsertStatement(object.getClass());
         try (final var preparedStatement = connection.prepareStatement(insertStatement)) {
             final var index = new AtomicInteger(1);
-            SQLCacheUtils.getFields(object.getClass()).stream()
+            ClassesMetaDataCache.getFields(object.getClass()).stream()
                     .filter(field -> !field.isAnnotationPresent(Id.class))
                     .map(field -> getFieldValue(field, object))
                     .forEach(value -> setObject(preparedStatement, index.getAndIncrement(), value.get()));
@@ -44,15 +46,17 @@ public class JdbcTemplate<T> implements AutoCloseable {
 
     public void update(final T object) {
         final Optional<Savepoint> savepoint = getSavePoint(connection);
-        final String updateStatement = SQLCacheUtils.getUpdateStatement(object.getClass());
+        final String updateStatement = ClassesMetaDataCache.getUpdateStatement(object.getClass());
         try (final var preparedStatement = connection.prepareStatement(updateStatement)) {
             final var index = new AtomicInteger(1);
-            final Field idField = SQLCacheUtils.getIdField(object.getClass()).get();
-            SQLCacheUtils.getFields(object.getClass()).stream()
+            final Field idField = ClassesMetaDataCache.getIdField(object.getClass())
+                    .orElseThrow(IdAnnotaionIsNotPresentedException::new);
+            ClassesMetaDataCache.getFields(object.getClass()).stream()
                     .filter(field -> !field.isAnnotationPresent(Id.class))
                     .map(field -> getFieldValue(field, object))
                     .forEach(value -> setObject(preparedStatement, index.getAndIncrement(), value.get()));
-            setObject(preparedStatement, index.getAndIncrement(), getFieldValue(idField, object).get());
+            setObject(preparedStatement, index.getAndIncrement(),
+                    getFieldValue(idField, object).orElseThrow(IdFieldIsNullException::new));
             preparedStatement.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
@@ -61,17 +65,24 @@ public class JdbcTemplate<T> implements AutoCloseable {
         }
     }
 
-    public void createOrUpdate(final T object) {
-        boolean isUpdate = false;
-        final var checkIfExistsStatement = SQLCacheUtils.getCheckIfExistsStatement(object.getClass());
+    public boolean exists(final Long id, final Class clazz) {
+        final var checkIfExistsStatement = ClassesMetaDataCache.getCheckIfExistsStatement(clazz);
         try (final var preparedStatement = connection.prepareStatement(checkIfExistsStatement)) {
-            final Field idField = SQLCacheUtils.getIdField(object.getClass()).get();
-            preparedStatement.setObject(1, ReflectionUtils.getFieldValue(idField, object).get());
+            preparedStatement.setObject(1, id);
             final var resultSet = preparedStatement.executeQuery();
-            isUpdate = resultSet.next();
+            return resultSet.next();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
+            return false;
         }
+    }
+
+    public void createOrUpdate(final T object) {
+        final Object id = ClassesMetaDataCache.getIdField(object.getClass())
+                .map(field -> getFieldValue(field, object)
+                        .orElseThrow(IdFieldIsNullException::new))
+                .orElseThrow(IdAnnotaionIsNotPresentedException::new);
+        final boolean isUpdate = exists((Long) id, object.getClass());
         if (isUpdate) {
             update(object);
         } else {
@@ -80,7 +91,7 @@ public class JdbcTemplate<T> implements AutoCloseable {
     }
 
     public <T> T load(final long id, final Class<T> clazz) {
-        try (final var preparedStatement = connection.prepareStatement(SQLCacheUtils.getSelectOneStatement(clazz))) {
+        try (final var preparedStatement = connection.prepareStatement(ClassesMetaDataCache.getSelectOneStatement(clazz))) {
             setObject(preparedStatement, 1, id);
             return mapResultSetToObjects(preparedStatement.executeQuery(), clazz).stream()
                     .findFirst()
@@ -92,11 +103,11 @@ public class JdbcTemplate<T> implements AutoCloseable {
     }
 
     public <T> List<T> loadAll(Class<T> clazz) {
-        try (final var preparedStatement = connection.prepareStatement(SQLCacheUtils.getSelectAllStatement(clazz))) {
+        try (final var preparedStatement = connection.prepareStatement(ClassesMetaDataCache.getSelectAllStatement(clazz))) {
             return mapResultSetToObjects(preparedStatement.executeQuery(), clazz);
         } catch (SQLException e) {
             System.err.println(e.getMessage());
-            return null;
+            return emptyList();
         }
     }
 
@@ -109,7 +120,7 @@ public class JdbcTemplate<T> implements AutoCloseable {
         final List<T> result = new ArrayList<>();
         while (resultSet.next()) {
             final T object = createObject(clazz);
-            for (Field field : clazz.getDeclaredFields()) {
+            for (Field field : ClassesMetaDataCache.getFields(clazz)) {
                 final Object value = resultSet.getObject(field.getName());
                 setFieldValue(field, object, value);
             }
