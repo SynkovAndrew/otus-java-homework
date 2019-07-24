@@ -28,12 +28,17 @@ public class DBService<T> implements DBServiceInterface<T> {
     }
 
     @Override
-    public <T> T load(final long id, final Class<T> clazz) {
+    public boolean exists(final Long id, final Class clazz) {
+        return template.exists(id, clazz);
+    }
+
+    @Override
+    public T load(final long id, final Class<T> clazz) {
         return template.load(id, clazz);
     }
 
     @Override
-    public <T> List<T> loadAll(final Class<T> clazz) {
+    public List<T> loadAll(final Class<T> clazz) {
         return template.loadAll(clazz);
     }
 }

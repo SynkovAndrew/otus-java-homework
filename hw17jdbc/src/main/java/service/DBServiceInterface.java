@@ -9,8 +9,10 @@ public interface DBServiceInterface<T> {
 
     void createOrUpdate(T object);
 
-    <T> T load(long id, Class<T> clazz);
+    boolean exists(final Long id, final Class clazz);
 
-    <T> List<T> loadAll(Class<T> clazz);
+    T load(long id, Class<T> clazz);
+
+    List<T> loadAll(Class<T> clazz);
 }
 
