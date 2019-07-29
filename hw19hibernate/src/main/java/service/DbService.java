@@ -1,43 +1,43 @@
 package service;
 
-import repository.DbRepository;
+import repository.DAO;
 
 import java.util.List;
 
-public class DbService<T> implements DBServiceInterface<T> {
-    private final DbRepository<T> repository;
+public class DbService implements DBServiceInterface {
+    private final DAO dao;
 
     public DbService() {
-        repository = new DbRepository<>();
+        dao = new DAO();
     }
 
     @Override
-    public void create(T object) {
-        repository.create(object);
+    public <T> void create(final T object) {
+        dao.create(object);
     }
 
     @Override
-    public void update(T object) {
-
-    }
-
-    @Override
-    public void createOrUpdate(T object) {
+    public <T> void update(T object) {
 
     }
 
     @Override
-    public boolean exists(Long id, Class clazz) {
+    public <T> void createOrUpdate(T object) {
+
+    }
+
+    @Override
+    public <T> boolean exists(Long id, Class clazz) {
         return false;
     }
 
     @Override
-    public T load(long id, Class<T> clazz) {
-        return repository.load(id, clazz);
+    public <T> T load(final long id, final Class<T> clazz) {
+        return dao.load(id, clazz);
     }
 
     @Override
-    public List<T> loadAll(Class<T> clazz) {
-        return null;
+    public <T> List<T> loadAll(final Class<T> clazz) {
+        return dao.loadAll(clazz);
     }
 }

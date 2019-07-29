@@ -15,11 +15,12 @@ import javax.persistence.*;
 @Table(name = "phone")
 public class Phone {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "phone_generator")
+    @SequenceGenerator(name = "phone_generator", sequenceName = "phone_seq")
     private Long id;
     @Column(name = "number")
     private String number;
-    @ManyToOne
-    @JoinColumn(name = "user")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
     private User user;
 }
