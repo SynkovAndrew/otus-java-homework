@@ -7,11 +7,9 @@ import org.junit.jupiter.api.Test;
 import service.DBServiceInterface;
 import service.DbService;
 
-import java.util.Collections;
-import java.util.List;
-
 import static com.google.common.collect.Lists.newArrayList;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DbServiceUserTest {
     private DBServiceInterface service;
