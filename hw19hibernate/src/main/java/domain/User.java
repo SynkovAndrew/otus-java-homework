@@ -15,10 +15,10 @@ import java.util.List;
 @Entity
 @Table(name = "user")
 public class User {
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "address")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "addressId")
     private Address address;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Phone> phones;
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_generator")

@@ -21,6 +21,5 @@ public class Address {
     @Column(name = "street")
     private String street;
     @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user")
     private User user;
 }

@@ -98,6 +98,7 @@ public class JdbcServiceUserTest {
         final List<Address> addresses = service.loadAll(Address.class);
         final List<Phone> phones = service.loadAll(Phone.class);
         final List<User> users = service.loadAll(User.class);
+        users.forEach(User::getPhones);
 
         assertNotNull(users);
     }
