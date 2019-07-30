@@ -7,12 +7,10 @@ public interface DBServiceInterface {
 
     <T> void update(T object);
 
-    <T> void createOrUpdate(T object);
-
-    <T> boolean exists(final Long id, final Class clazz);
-
     <T> T load(long id, Class<T> clazz);
 
     <T> List<T> loadAll(Class<T> clazz);
+
+    <T> void removeAll(Class<T> clazz);
 }
 

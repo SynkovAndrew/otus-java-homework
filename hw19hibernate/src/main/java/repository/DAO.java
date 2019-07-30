@@ -26,18 +26,13 @@ public class DAO {
 
 
     public <T> void update(T object) {
+        try (final var session = sessionFactory.openSession()) {
+            final Transaction transaction = session.beginTransaction();
+            session.update(object);
+            transaction.commit();
+        }
 
     }
-
-    public <T> void createOrUpdate(T object) {
-
-    }
-
-
-    public boolean exists(Long id, Class clazz) {
-        return false;
-    }
-
 
     public <T> T load(long id, Class<T> clazz) {
         try (final var session = sessionFactory.openSession()) {
@@ -45,11 +40,20 @@ public class DAO {
         }
     }
 
-
     public <T> List<T> loadAll(Class<T> clazz) {
         final String tableName = capitalize(clazz.getAnnotation(Table.class).name());
         try (final var session = sessionFactory.openSession()) {
             return session.createQuery(String.format("from %s", tableName), clazz).getResultList();
+        }
+    }
+
+    public <T> void removeAll(Class<T> clazz) {
+        final String tableName = capitalize(clazz.getAnnotation(Table.class).name());
+        try (final var session = sessionFactory.openSession()) {
+            final Transaction transaction = session.beginTransaction();
+            final List<T> resultList = session.createQuery(String.format("from %s", tableName), clazz).getResultList();
+            resultList.forEach(session::delete);
+            transaction.commit();
         }
     }
 } 

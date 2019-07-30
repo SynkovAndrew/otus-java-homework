@@ -7,8 +7,12 @@ import java.util.List;
 public class DbService implements DBServiceInterface {
     private final DAO dao;
 
-    public DbService() {
+    private DbService() {
         dao = new DAO();
+    }
+
+    public static DbService build() {
+        return new DbService();
     }
 
     @Override
@@ -18,17 +22,7 @@ public class DbService implements DBServiceInterface {
 
     @Override
     public <T> void update(T object) {
-
-    }
-
-    @Override
-    public <T> void createOrUpdate(T object) {
-
-    }
-
-    @Override
-    public <T> boolean exists(Long id, Class clazz) {
-        return false;
+        dao.update(object);
     }
 
     @Override
@@ -39,5 +33,10 @@ public class DbService implements DBServiceInterface {
     @Override
     public <T> List<T> loadAll(final Class<T> clazz) {
         return dao.loadAll(clazz);
+    }
+
+    @Override
+    public <T> void removeAll(Class<T> clazz) {
+        dao.removeAll(clazz);
     }
 }

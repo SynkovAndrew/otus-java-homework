@@ -20,6 +20,7 @@ public class Address {
     private Long id;
     @Column(name = "street")
     private String street;
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
     private User user;
 }
