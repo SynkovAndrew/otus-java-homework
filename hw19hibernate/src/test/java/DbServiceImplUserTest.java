@@ -1,22 +1,28 @@
 import domain.Address;
 import domain.Phone;
 import domain.User;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.DBServiceInterface;
-import service.DbService;
+import repository.DAO;
+import service.DBService;
+import service.DbServiceImpl;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static configuration.HibernateConfigurationFactory.getSessionFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class DbServiceUserTest {
-    private DBServiceInterface service;
+public class DbServiceImplUserTest {
+    private DBService service;
 
     @BeforeEach
     public void beforeEach() {
-        service = DbService.build();
+        final SessionFactory sessionFactory = getSessionFactory(
+                "hibernate.cfg.xml", Address.class, Phone.class, User.class);
+        final DAO dao = new DAO(sessionFactory);
+        service = new DbServiceImpl(dao);
     }
 
     @AfterEach
@@ -48,8 +54,6 @@ public class DbServiceUserTest {
 
         final User loaded = service.loadAll(User.class).stream().findFirst().get();
 
-        assertNotNull(loaded);
-        assertNotNull(loaded.getId());
         assertNotNull(loaded.getAddress());
         assertNotNull(loaded.getAddress().getId());
         assertNotNull(loaded.getPhones());

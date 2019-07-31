@@ -2,7 +2,7 @@ package service;
 
 import java.util.List;
 
-public interface DBServiceInterface {
+public interface DBService {
     <T> void create(T object);
 
     <T> void update(T object);

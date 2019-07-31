@@ -1,19 +1,13 @@
 package service;
 
+import lombok.RequiredArgsConstructor;
 import repository.DAO;
 
 import java.util.List;
 
-public class DbService implements DBServiceInterface {
+@RequiredArgsConstructor
+public class DbServiceImpl implements DBService {
     private final DAO dao;
-
-    private DbService() {
-        dao = new DAO();
-    }
-
-    public static DbService build() {
-        return new DbService();
-    }
 
     @Override
     public <T> void create(final T object) {
