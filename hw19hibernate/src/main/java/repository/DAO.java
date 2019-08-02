@@ -1,5 +1,6 @@
 package repository;
 
+import cache.CacheEngine;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -12,10 +13,11 @@ import static java.util.Optional.ofNullable;
 import static utils.StringUtils.capitalize;
 
 @RequiredArgsConstructor
-public class DAO {
+public class DAO<T> {
     private final SessionFactory sessionFactory;
+    private final CacheEngine<Long, T> cacheEngine;
 
-    public <T> void create(T object) {
+    public void create(T object) {
         Transaction transaction = null;
         try (final var session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
@@ -26,8 +28,7 @@ public class DAO {
         }
     }
 
-
-    public <T> void update(T object) {
+    public void update(T object) {
         Transaction transaction = null;
         try (final var session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
@@ -38,20 +39,24 @@ public class DAO {
         }
     }
 
-    public <T> T load(long id, Class<T> clazz) {
-        Transaction transaction = null;
-        try (final var session = sessionFactory.openSession()) {
-            transaction = session.beginTransaction();
-            final T obj = session.get(clazz, id);
-            transaction.commit();
-            return obj;
-        } catch (Exception e) {
-            ofNullable(transaction).ifPresent(Transaction::rollback);
-            return null;
-        }
+    public T load(long id, Class<T> clazz) {
+        return ofNullable(cacheEngine.get(id))
+                .orElseGet(() -> {
+                    Transaction transaction = null;
+                    try (final var session = sessionFactory.openSession()) {
+                        transaction = session.beginTransaction();
+                        final T obj = session.get(clazz, id);
+                        transaction.commit();
+                        cacheEngine.put(id, obj);
+                        return obj;
+                    } catch (Exception e) {
+                        ofNullable(transaction).ifPresent(Transaction::rollback);
+                        return null;
+                    }
+                });
     }
 
-    public <T> List<T> loadAll(Class<T> clazz) {
+    public List<T> loadAll(Class<T> clazz) {
         Transaction transaction = null;
         final String tableName = capitalize(clazz.getAnnotation(Table.class).name());
         try (final var session = sessionFactory.openSession()) {
@@ -65,7 +70,7 @@ public class DAO {
         }
     }
 
-    public <T> void removeAll(Class<T> clazz) {
+    public void removeAll(Class<T> clazz) {
         Transaction transaction = null;
         final String tableName = capitalize(clazz.getAnnotation(Table.class).name());
         try (final var session = sessionFactory.openSession()) {

@@ -1,3 +1,4 @@
+import cache.CacheEngineImpl;
 import domain.Address;
 import domain.Phone;
 import domain.User;
@@ -9,20 +10,24 @@ import repository.DAO;
 import service.DBService;
 import service.DbServiceImpl;
 
+import java.time.Duration;
+import java.time.Instant;
+
 import static com.google.common.collect.Lists.newArrayList;
 import static configuration.HibernateConfigurationFactory.getSessionFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DbServiceImplUserTest {
-    private DBService service;
+    private DBService<User> service;
 
     @BeforeEach
     public void beforeEach() {
         final SessionFactory sessionFactory = getSessionFactory(
                 "hibernate.cfg.xml", Address.class, Phone.class, User.class);
-        final DAO dao = new DAO(sessionFactory);
-        service = new DbServiceImpl(dao);
+        final CacheEngineImpl<Long, User> cacheEngine = new CacheEngineImpl<>(20);
+        final DAO<User> dao = new DAO<>(sessionFactory, cacheEngine);
+        service = new DbServiceImpl<>(dao);
     }
 
     @AfterEach
@@ -112,4 +117,37 @@ public class DbServiceImplUserTest {
         assertEquals("+799999999999", loaded.getPhones().get(0).getNumber());
         assertEquals("+711111111", loaded.getPhones().get(1).getNumber());
     }
+
+    @Test
+    public void cacheTest() {
+        for (int i = 1; i <= 10000; i++) {
+            service.create(User.builder()
+                    .name("User " + i)
+                    .age(i)
+                    .build());
+        }
+
+        long totalFromDb = 0;
+        long totalFromCache = 0;
+
+        for (long i = 1; i <= 10000; i++) {
+            Instant start = Instant.now();
+            service.load(i, User.class);
+            Instant finish = Instant.now();
+            totalFromDb = totalFromDb + Duration.between(start, finish).toNanos();
+        }
+
+        for (long i = 1; i <= 10000; i++) {
+            Instant start = Instant.now();
+            service.load(i, User.class);
+            Instant finish = Instant.now();
+            totalFromCache = totalFromCache + Duration.between(start, finish).toNanos();
+        }
+
+        System.out.println("Loading from db avg. time: " + totalFromDb / 10000 + " nanos");
+        System.out.println("Loading from cache avg. time: " + totalFromCache / 10000 + " nanos");
+    }
+
+
+
 }

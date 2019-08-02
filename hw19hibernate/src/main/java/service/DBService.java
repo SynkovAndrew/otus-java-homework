@@ -2,15 +2,15 @@ package service;
 
 import java.util.List;
 
-public interface DBService {
-    <T> void create(T object);
+public interface DBService<T> {
+    void create(T object);
 
-    <T> void update(T object);
+    void update(T object);
 
-    <T> T load(long id, Class<T> clazz);
+    T load(long id, Class<T> clazz);
 
-    <T> List<T> loadAll(Class<T> clazz);
+    List<T> loadAll(Class<T> clazz);
 
-    <T> void removeAll(Class<T> clazz);
+    void removeAll(Class<T> clazz);
 }
 
