@@ -1,5 +1,6 @@
 package cache;
 
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -33,6 +34,7 @@ public class CacheEngineImpl<K, V> implements CacheEngine<K, V> {
                 .key(key)
                 .value(value)
                 .build();
+        final var referenceQueue = new ReferenceQueue<CacheElement<K, V>>();
         final SoftReference<CacheElement<K, V>> softReference = new SoftReference<>(element);
         elements.put(key, softReference);
         System.out.println("------------------------- cache: " + element.getKey() + " 's been cached!");
@@ -50,6 +52,7 @@ public class CacheEngineImpl<K, V> implements CacheEngine<K, V> {
                         })
                         .orElseGet(() -> {
                             miss.incrementAndGet();
+                            elements.remove(key);
                             System.out.println("------------------------- cache: " + key + " 's been missed!");
                             return null;
                         }))
