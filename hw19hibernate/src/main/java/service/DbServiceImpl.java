@@ -1,36 +1,48 @@
 package service;
 
+import cache.CacheEngine;
 import lombok.RequiredArgsConstructor;
 import repository.DAO;
 
 import java.util.List;
 
+import static java.util.Optional.ofNullable;
+
 @RequiredArgsConstructor
-public class DbServiceImpl implements DBService {
-    private final DAO dao;
+public class DbServiceImpl<T> implements DBService<T> {
+    private final DAO<T> dao;
+    private final CacheEngine<Long, T> cacheEngine;
+
 
     @Override
-    public <T> void create(final T object) {
+    public void create(final T object) {
         dao.create(object);
     }
 
     @Override
-    public <T> void update(T object) {
+    public void update(T object) {
         dao.update(object);
     }
 
     @Override
-    public <T> T load(final long id, final Class<T> clazz) {
-        return dao.load(id, clazz);
+    public T load(final long id, final Class<T> clazz) {
+        return ofNullable(cacheEngine.get(id))
+                .orElseGet(() -> {
+                    final var obj = dao.load(id, clazz);
+                    cacheEngine.put(id, obj);
+                    return obj;
+                });
+
     }
 
     @Override
-    public <T> List<T> loadAll(final Class<T> clazz) {
+    public List<T> loadAll(final Class<T> clazz) {
         return dao.loadAll(clazz);
     }
 
     @Override
-    public <T> void removeAll(Class<T> clazz) {
+    public void removeAll(Class<T> clazz) {
         dao.removeAll(clazz);
+        cacheEngine.dispose();
     }
 }

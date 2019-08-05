@@ -1,3 +1,4 @@
+import cache.CacheEngineImpl;
 import domain.Address;
 import domain.Phone;
 import domain.User;
@@ -9,20 +10,25 @@ import repository.DAO;
 import service.DBService;
 import service.DbServiceImpl;
 
+import java.time.Duration;
+import java.time.Instant;
+
 import static com.google.common.collect.Lists.newArrayList;
 import static configuration.HibernateConfigurationFactory.getSessionFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DbServiceImplUserTest {
-    private DBService service;
+    private DBService<User> service;
+    private CacheEngineImpl<Long, User> cacheEngine;
 
     @BeforeEach
     public void beforeEach() {
         final SessionFactory sessionFactory = getSessionFactory(
                 "hibernate.cfg.xml", Address.class, Phone.class, User.class);
-        final DAO dao = new DAO(sessionFactory);
-        service = new DbServiceImpl(dao);
+        cacheEngine = new CacheEngineImpl<>(10000);
+        final DAO<User> dao = new DAO<>(sessionFactory);
+        service = new DbServiceImpl<>(dao, cacheEngine);
     }
 
     @AfterEach
@@ -112,4 +118,43 @@ public class DbServiceImplUserTest {
         assertEquals("+799999999999", loaded.getPhones().get(0).getNumber());
         assertEquals("+711111111", loaded.getPhones().get(1).getNumber());
     }
+
+    @Test
+    public void cacheTest() {
+        final int ITERATION_COUNT = 10000;
+        for (int i = 1; i <= ITERATION_COUNT; i++) {
+            service.create(User.builder()
+                    .name("User " + i)
+                    .age(i)
+                    .build());
+        }
+
+        long fromDbTotal = 0;
+        long fromCacheTotal = 0;
+
+        for (long i = 1; i <= ITERATION_COUNT; i++) {
+            Instant start = Instant.now();
+            service.load(i, User.class);
+            Instant finish = Instant.now();
+            fromDbTotal = fromDbTotal + Duration.between(start, finish).toNanos();
+        }
+
+        for (long i = 1; i <= ITERATION_COUNT; i++) {
+            Instant start = Instant.now();
+            service.load(i, User.class);
+            Instant finish = Instant.now();
+            fromCacheTotal = fromCacheTotal + Duration.between(start, finish).toNanos();
+        }
+
+        System.out.println();
+        System.out.println();
+        System.out.println("Loading from db avg. time: " + fromDbTotal / ITERATION_COUNT + " nanos");
+        System.out.println("Loading from cache avg. time: " + fromCacheTotal / ITERATION_COUNT + " nanos");
+        System.out.println("Hit count: " + cacheEngine.getHitCount());
+        System.out.println("Miss count: " + cacheEngine.getMissCount());
+        System.out.println();
+        System.out.println();
+    }
+
+
 }
