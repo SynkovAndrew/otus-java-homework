@@ -1,6 +1,5 @@
 package repository;
 
-import cache.CacheEngine;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -15,7 +14,6 @@ import static utils.StringUtils.capitalize;
 @RequiredArgsConstructor
 public class DAO<T> {
     private final SessionFactory sessionFactory;
-    private final CacheEngine<Long, T> cacheEngine;
 
     public void create(T object) {
         Transaction transaction = null;
@@ -40,20 +38,16 @@ public class DAO<T> {
     }
 
     public T load(long id, Class<T> clazz) {
-        return ofNullable(cacheEngine.get(id))
-                .orElseGet(() -> {
-                    Transaction transaction = null;
-                    try (final var session = sessionFactory.openSession()) {
-                        transaction = session.beginTransaction();
-                        final T obj = session.get(clazz, id);
-                        transaction.commit();
-                        cacheEngine.put(id, obj);
-                        return obj;
-                    } catch (Exception e) {
-                        ofNullable(transaction).ifPresent(Transaction::rollback);
-                        return null;
-                    }
-                });
+        Transaction transaction = null;
+        try (final var session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            final T obj = session.get(clazz, id);
+            transaction.commit();
+            return obj;
+        } catch (Exception e) {
+            ofNullable(transaction).ifPresent(Transaction::rollback);
+            return null;
+        }
     }
 
     public List<T> loadAll(Class<T> clazz) {

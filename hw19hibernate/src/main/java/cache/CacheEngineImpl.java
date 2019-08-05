@@ -1,8 +1,10 @@
 package cache;
 
 import java.lang.ref.SoftReference;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.System.currentTimeMillis;
@@ -25,7 +27,14 @@ public class CacheEngineImpl<K, V> implements CacheEngine<K, V> {
     @Override
     public void put(K key, V value) {
         if (elements.size() == maxElements) {
-            elements.keySet().stream().findFirst().ifPresent(elements::remove);
+            elements.values().stream()
+                    .map(softReference -> ofNullable(softReference)
+                            .map(SoftReference::get)
+                            .orElse(null))
+                    .filter(Objects::nonNull)
+                    .min(Comparator.comparingLong(CacheElement::getLastAccessTimeMs))
+                    .map(CacheElement::getKey)
+                    .ifPresent(elements::remove);
         }
         final CacheElement<K, V> element = CacheElement.<K, V>builder()
                 .createdAtMs(currentTimeMillis())

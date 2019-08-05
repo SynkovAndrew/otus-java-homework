@@ -27,8 +27,8 @@ public class DbServiceImplUserTest {
         final SessionFactory sessionFactory = getSessionFactory(
                 "hibernate.cfg.xml", Address.class, Phone.class, User.class);
         cacheEngine = new CacheEngineImpl<>(10000);
-        final DAO<User> dao = new DAO<>(sessionFactory, cacheEngine);
-        service = new DbServiceImpl<>(dao);
+        final DAO<User> dao = new DAO<>(sessionFactory);
+        service = new DbServiceImpl<>(dao, cacheEngine);
     }
 
     @AfterEach
