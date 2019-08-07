@@ -13,7 +13,6 @@ public class DbServiceImpl<T> implements DBService<T> {
     private final DAO<T> dao;
     private final CacheEngine<Long, T> cacheEngine;
 
-
     @Override
     public void create(final T object) {
         dao.create(object);
