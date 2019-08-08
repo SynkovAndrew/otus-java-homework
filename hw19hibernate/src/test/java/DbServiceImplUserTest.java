@@ -27,13 +27,13 @@ public class DbServiceImplUserTest {
         final SessionFactory sessionFactory = getSessionFactory(
                 "hibernate.cfg.xml", Address.class, Phone.class, User.class);
         cacheEngine = new CacheEngineImpl<>(10000);
-        final DAO<User> dao = new DAO<>(sessionFactory);
+        final DAO<User> dao = new DAO<>(sessionFactory, User.class);
         service = new DbServiceImpl<>(dao, cacheEngine);
     }
 
     @AfterEach
     public void afterEach() {
-        service.removeAll(User.class);
+        service.removeAll();
     }
 
     @Test
@@ -58,7 +58,7 @@ public class DbServiceImplUserTest {
         user.setPhones(newArrayList(phone1, phone2));
         service.create(user);
 
-        final User loaded = service.loadAll(User.class).stream().findFirst().get();
+        final User loaded = service.loadAll().stream().findFirst().get();
 
         assertNotNull(loaded.getAddress());
         assertNotNull(loaded.getAddress().getId());
@@ -102,7 +102,7 @@ public class DbServiceImplUserTest {
         address.setStreet("Poltava st.");
         service.update(user);
 
-        final User loaded = service.loadAll(User.class).stream().findFirst().get();
+        final User loaded = service.loadAll().stream().findFirst().get();
 
         assertNotNull(loaded);
         assertNotNull(loaded.getId());
@@ -134,14 +134,14 @@ public class DbServiceImplUserTest {
 
         for (long i = 1; i <= ITERATION_COUNT; i++) {
             Instant start = Instant.now();
-            service.load(i, User.class);
+            service.load(i);
             Instant finish = Instant.now();
             fromDbTotal = fromDbTotal + Duration.between(start, finish).toNanos();
         }
 
         for (long i = 1; i <= ITERATION_COUNT; i++) {
             Instant start = Instant.now();
-            service.load(i, User.class);
+            service.load(i);
             Instant finish = Instant.now();
             fromCacheTotal = fromCacheTotal + Duration.between(start, finish).toNanos();
         }

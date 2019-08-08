@@ -3,12 +3,13 @@ package web.servlet;
 import domain.User;
 import service.DbServiceImpl;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class UserServlet extends HttpServlet {
     private final DbServiceImpl<User> dbService;
@@ -18,10 +19,14 @@ public class UserServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        final List<User> users = dbService.loadAll(User.class);
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        final List<User> users = dbService.loadAll();
+        final String content = "[" + users.stream().map(User::toString).collect(Collectors.joining(", ")) + "]";
 
-        resp.setContentType("");
-
+        resp.setContentType("text/html");
+        resp.setStatus(HttpServletResponse.SC_OK);
+        final PrintWriter writer = resp.getWriter();
+        writer.print(content);
+        writer.flush();
     }
 }

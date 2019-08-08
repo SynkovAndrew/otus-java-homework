@@ -7,10 +7,10 @@ public interface DBService<T> {
 
     void update(T object);
 
-    T load(long id, Class<T> clazz);
+    T load(long id);
 
-    List<T> loadAll(Class<T> clazz);
+    List<T> loadAll();
 
-    void removeAll(Class<T> clazz);
+    void removeAll();
 }
 

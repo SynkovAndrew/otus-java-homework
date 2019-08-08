@@ -14,6 +14,7 @@ import static utils.StringUtils.capitalize;
 @RequiredArgsConstructor
 public class DAO<T> {
     private final SessionFactory sessionFactory;
+    private final Class<T> clazz;
 
     public void create(T object) {
         Transaction transaction = null;
@@ -37,7 +38,7 @@ public class DAO<T> {
         }
     }
 
-    public T load(long id, Class<T> clazz) {
+    public T load(long id) {
         Transaction transaction = null;
         try (final var session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
@@ -50,7 +51,7 @@ public class DAO<T> {
         }
     }
 
-    public List<T> loadAll(Class<T> clazz) {
+    public List<T> loadAll() {
         Transaction transaction = null;
         final String tableName = capitalize(clazz.getAnnotation(Table.class).name());
         try (final var session = sessionFactory.openSession()) {
@@ -64,7 +65,7 @@ public class DAO<T> {
         }
     }
 
-    public void removeAll(Class<T> clazz) {
+    public void removeAll() {
         Transaction transaction = null;
         final String tableName = capitalize(clazz.getAnnotation(Table.class).name());
         try (final var session = sessionFactory.openSession()) {

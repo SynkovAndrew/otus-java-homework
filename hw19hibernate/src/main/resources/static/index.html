@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management</title>
+    <script>
+        function loadUsers() {
+            fetch('http://localhost:8080/user')
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    document.getElementById("userContainer").innerHTML = data;
+                })
+        }
+    </script>
+</head>
+<body onload="loadUsers()">
+<b>Users</b>
+<div id="userContainer"></div>
+</body>
+</html>
