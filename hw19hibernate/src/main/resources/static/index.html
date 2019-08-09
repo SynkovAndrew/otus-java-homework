@@ -5,18 +5,50 @@
     <title>User Management</title>
     <script>
         function loadUsers() {
-            fetch('http://localhost:8080/user')
+            fetch('http://localhost:8090/user')
                 .then(function (response) {
                     return response.json();
                 })
                 .then(function (data) {
-                    document.getElementById("userContainer").innerHTML = data;
-                })
+                    document.getElementById("userContainer").innerHTML = createUserTable(data);
+                });
+        }
+        function createUserTable(users) {
+            var table = "<b>Users</b>" +
+                "<table style='border: 4px black; width: 100%; border-collapse: collapse;'>" +
+                "<tr>" + th('Id') + th('Name') + th('Age') + " </tr>";
+            for (var i = 0; i < users.length; i++) {
+                table += "<tr>" + td(users[i].id) + td(users[i].name) + td(users[i].age) + "</tr>";
+            }
+            table += "</table>";
+            return table;
+        }
+
+        function th(value) {
+            return '<th style="border: 1px solid black; text-align: center; background-color: #f7f6dc;">' + value + '</th>';
+        }
+
+        function td(value) {
+            return '<td style="border: 1px solid black; text-align: center">' + value + '</td>';
+        }
+        function renderPage() {
+            loadUsers();
         }
     </script>
 </head>
-<body onload="loadUsers()">
-<b>Users</b>
+<body onload="renderPage()">
+<iframe name="hiddenFrame" width="0" height="0" border="0" style="display: none;"></iframe>
+<div id="creteUserForm">
+    <form action="http://localhost:8090/user" method="POST" target="hiddenFrame" onsubmit="location.reload()">
+        <b>Name:</b><br>
+        <input type="text" name="name"><br>
+        <b>Age:</b><br>
+        <input type="text" name="age"><br><br>
+        <input type="submit" value="create">
+    </form>
+</div>
+<br>
+<br>
 <div id="userContainer"></div>
 </body>
 </html>
