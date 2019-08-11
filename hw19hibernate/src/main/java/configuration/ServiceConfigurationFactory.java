@@ -32,6 +32,6 @@ public class ServiceConfigurationFactory<T> {
                 "hibernate.cfg.xml", Address.class, Phone.class, User.class);
         final CacheEngineImpl<Long, T> cacheEngine = new CacheEngineImpl<>(10000);
         final DAO<T> dao = new DAO<>(sessionFactory, clazz);
-        return new DbServiceImpl<T>(dao, cacheEngine);
+        return new DbServiceImpl<>(dao, cacheEngine);
     }
 }
