@@ -37,13 +37,15 @@ public class UserServlet extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
         final String name = req.getParameter("name");
         final Integer age = ofNullable(req.getParameter("age")).map(Integer::valueOf).orElse(null);
-        dbService.create(
-                User.builder()
-                        .name(name)
-                        .age(age)
-                        .build()
-        );
+        final User user = User.builder()
+                .name(name)
+                .age(age)
+                .build();
+        dbService.create(user);
         resp.setContentType("application/json");
         resp.setStatus(HttpServletResponse.SC_OK);
+        final PrintWriter writer = resp.getWriter();
+        writer.print(gson.toJson(user));
+        writer.flush();
     }
 }
