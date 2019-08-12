@@ -1,0 +1,14 @@
+#users-table {
+    border: 4px black;
+    width: 100%;
+    border-collapse: collapse;
+}
+#users-th {
+    border: 1px solid black;
+    text-align: center;
+    background-color: #f7f6dc;
+}
+#users-td {
+    border: 1px solid black;
+    text-align: center;
+}

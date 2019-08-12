@@ -13,7 +13,6 @@ public class DbServiceImpl<T> implements DBService<T> {
     private final DAO<T> dao;
     private final CacheEngine<Long, T> cacheEngine;
 
-
     @Override
     public void create(final T object) {
         dao.create(object);
@@ -25,10 +24,10 @@ public class DbServiceImpl<T> implements DBService<T> {
     }
 
     @Override
-    public T load(final long id, final Class<T> clazz) {
+    public T load(final long id) {
         return ofNullable(cacheEngine.get(id))
                 .orElseGet(() -> {
-                    final var obj = dao.load(id, clazz);
+                    final var obj = dao.load(id);
                     cacheEngine.put(id, obj);
                     return obj;
                 });
@@ -36,13 +35,13 @@ public class DbServiceImpl<T> implements DBService<T> {
     }
 
     @Override
-    public List<T> loadAll(final Class<T> clazz) {
-        return dao.loadAll(clazz);
+    public List<T> loadAll() {
+        return dao.loadAll();
     }
 
     @Override
-    public void removeAll(Class<T> clazz) {
-        dao.removeAll(clazz);
+    public void removeAll() {
+        dao.removeAll();
         cacheEngine.dispose();
     }
 }
