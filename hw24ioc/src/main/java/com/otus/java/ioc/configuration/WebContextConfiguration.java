@@ -31,12 +31,13 @@ public class WebContextConfiguration implements WebMvcConfigurer {
     private final ApplicationContext applicationContext;
 
     @Override
-    public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/WEB-INF/images/**").addResourceLocations("/images/");
-        registry.addResourceHandler("/WEB-INF/css/**").addResourceLocations("/css/");
-        registry.addResourceHandler("/WEB-INF/js/**").addResourceLocations("/js/");
-    }
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // when static resources are inside resources folder under WEB-INF
+        // registry.addResourceHandler("/resources/**").addResourceLocations("/WEB-INF/resources/");
 
+        // when static resources are inside static folder under webapp
+        registry.addResourceHandler("/static/**").addResourceLocations("/static/");
+    }
 
     @Bean
     public ThymeleafViewResolver viewResolver() {
@@ -58,7 +59,7 @@ public class WebContextConfiguration implements WebMvcConfigurer {
     public SpringResourceTemplateResolver templateResolver() {
         final var templateResolver = new SpringResourceTemplateResolver();
         templateResolver.setApplicationContext(this.applicationContext);
-        templateResolver.setPrefix("/WEB-INF/templates/");
+        templateResolver.setPrefix("/templates/");
         templateResolver.setSuffix(".html");
         templateResolver.setTemplateMode(TemplateMode.HTML);
         templateResolver.setCacheable(true);
