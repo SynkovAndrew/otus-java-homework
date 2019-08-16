@@ -5,7 +5,6 @@ import domain.Address;
 import domain.Phone;
 import domain.User;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,20 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ApplicationContextConfiguration.class, loader = AnnotationConfigContextLoader.class)
 public class DbServiceImplUserTest {
-    /*    private DBService<User> service;
-        private CacheEngineImpl<Long, User> cacheEngine;*/
     @Autowired
     private UserCacheEngine cacheEngine;
     @Autowired
     private UserService service;
-
-    @BeforeEach
-    public void beforeEach() {
-
-/*        cacheEngine = new CacheEngineImpl<>(10000);
-        final DAO<User> dao = new DAO<>(sessionFactory, User.class);
-        service = new DbServiceImpl<>(dao, cacheEngine);*/
-    }
 
     @AfterEach
     public void afterEach() {

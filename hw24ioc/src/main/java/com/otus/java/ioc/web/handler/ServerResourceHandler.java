@@ -11,7 +11,7 @@ import static java.util.Optional.ofNullable;
 public class ServerResourceHandler extends ResourceHandler {
     @PostConstruct
     public void init() {
-        ofNullable(ServerResourceHandler.class.getClassLoader().getResource("static"))
+        ofNullable(ServerResourceHandler.class.getClassLoader().getResource("WEB-INF"))
                 .ifPresentOrElse(url -> {
                     setDirectoriesListed(false);
                     setWelcomeFiles(new String[]{"index.html"});
