@@ -1,5 +1,5 @@
 import com.otus.java.ioc.cache.UserCacheEngine;
-import com.otus.java.ioc.configuration.ApplicationContextConfiguration;
+import com.otus.java.ioc.configuration.WebContextConfiguration;
 import com.otus.java.ioc.service.UserService;
 import domain.Address;
 import domain.Phone;
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = ApplicationContextConfiguration.class, loader = AnnotationConfigContextLoader.class)
+@ContextConfiguration(classes = WebContextConfiguration.class, loader = AnnotationConfigContextLoader.class)
 public class DbServiceImplUserTest {
     @Autowired
     private UserCacheEngine cacheEngine;
