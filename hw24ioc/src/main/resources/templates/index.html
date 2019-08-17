@@ -4,16 +4,87 @@
     <meta charset="UTF-8">
     <title>User Management</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
-    <script type="text/javascript" th:src="@{/js/users.js}"></script>
+    <!--    <link rel="stylesheet" type="text/css" th:href="@{/resources/style.css}"/>
+        <script type="text/javascript" th:src="@{/resources/users.js}"></script>-->
+    <style>
+        #users-table {
+            border: 4px black;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #users-th {
+            border: 1px solid black;
+            text-align: center;
+            background-color: #f7f6dc;
+        }
+
+        #users-td {
+            border: 1px solid black;
+            text-align: center;
+        }
+    </style>
+    <script>
+        function loadUsers() {
+            fetch('/app/user')
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    document.getElementById("userContainer").innerHTML = createUserTable(data);
+                });
+        }
+
+        function createUserTable(users) {
+            var table = "<b>Users</b>" +
+                "<table id='users-table'>" +
+                "<tr>" + th('Id') + th('Name') + th('Age') + " </tr>";
+            for (var i = 0; i < users.length; i++) {
+                table += "<tr>" + td(users[i].id) + td(users[i].name) + td(users[i].age) + "</tr>";
+            }
+            table += "</table>";
+            return table;
+        }
+
+        function th(value) {
+            return '<th id="users-th">' + value + '</th>';
+        }
+
+        function td(value) {
+            return '<td id="users-td">' + value + '</td>';
+        }
+
+        function renderPage() {
+            loadUsers();
+        }
+
+        $(function () {
+            $('input#create-button').click(function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '/app/user',
+                    type: 'post',
+                    data: JSON.stringify({name: $('#name-input').val(), age: $('#age-input').val()}),
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    dataType: 'json',
+                    success: function () {
+                        renderPage();
+                    }
+                });
+            });
+        });
+    </script>
 </head>
 <body onload="renderPage()">
 <div id="creteUserForm">
     <form id="create-user-form" action="#">
         <b>Name:</b><br>
-        <input type="text" name="name"><br>
+        <input type="text" id="name-input" name="name"><br>
         <b>Age:</b><br>
-        <input type="text" name="age"><br><br>
+        <input type="text" id="age-input" name="age"><br><br>
         <input id="create-button" type="submit" value="create">
     </form>
 </div>

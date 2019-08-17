@@ -24,19 +24,16 @@ import org.thymeleaf.templatemode.TemplateMode;
 import java.util.stream.Stream;
 
 @Configuration
-@ComponentScan(basePackages = "com.otus.java.ioc")
 @EnableWebMvc
+@ComponentScan(basePackages = "com.otus.java.ioc")
 @RequiredArgsConstructor
 public class WebContextConfiguration implements WebMvcConfigurer {
     private final ApplicationContext applicationContext;
 
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // when static resources are inside resources folder under WEB-INF
-        // registry.addResourceHandler("/resources/**").addResourceLocations("/WEB-INF/resources/");
-
-        // when static resources are inside static folder under webapp
-        registry.addResourceHandler("/static/**").addResourceLocations("/static/");
+    public void addResourceHandlers(final ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/resources/**")
+                .addResourceLocations("/resources/");
     }
 
     @Bean
