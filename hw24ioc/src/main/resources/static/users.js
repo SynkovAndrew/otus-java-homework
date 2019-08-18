@@ -1,5 +1,6 @@
 function loadUsers() {
-    fetch('/user')
+    const pathname = window.location.pathname;
+    fetch(pathname + 'user')
         .then(function (response) {
             return response.json();
         })
@@ -32,12 +33,21 @@ function renderPage() {
 }
 
 $(function () {
-    console.log("ready!");
     $('input#create-button').click(function (e) {
         e.preventDefault();
-        $.post('/user', $('form#create-user-form').serialize(), function () {
+        const pathname = window.location.pathname;
+        $.ajax({
+            url: pathname + 'user',
+            type: 'post',
+            data: JSON.stringify({name: $('#name-input').val(), age: $('#age-input').val()}),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            dataType: 'json',
+            success: function () {
                 renderPage();
-            }, 'json'
-        );
+            }
+        });
     });
 });

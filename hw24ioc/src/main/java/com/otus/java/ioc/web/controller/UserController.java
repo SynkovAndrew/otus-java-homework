@@ -16,7 +16,7 @@ public class UserController {
     private final UserService userService;
     private final Gson gson;
 
-    @GetMapping("/user")
+    @GetMapping(value = "/user", produces = "application/json;charset=UTF-8")
     public String loadUsers() {
         return gson.toJson(userService.loadAll());
     }
