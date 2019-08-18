@@ -10,7 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
+import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -20,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = WebContextConfiguration.class, loader = AnnotationConfigContextLoader.class)
+@ContextConfiguration(classes = {WebContextConfiguration.class})
+@WebAppConfiguration
 public class DbServiceImplUserTest {
     @Autowired
     private UserCacheEngine cacheEngine;
