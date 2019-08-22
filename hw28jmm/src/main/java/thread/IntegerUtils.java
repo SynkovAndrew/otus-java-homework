@@ -1,3 +1,5 @@
+package thread;
+
 public class IntegerUtils {
     public static boolean inRange(final int from,
                                   final int to,
