@@ -16,11 +16,9 @@ public class ThreadTask implements Runnable {
         while (true) {
             synchronized (sharedState.getMonitor()) {
                 if (getRunCondition()) {
-                    final var inRange = inRange();
-                    handleFlag(inRange);
-                    final var value = getNextValue();
-                    System.out.printf("%s: %d\n", currentThread().getName(), value);
-                    ThreadUtils.sleep(300);
+                    handleFlag();
+                    System.out.printf("%s: %d\n", currentThread().getName(), getNextValue());
+                    ThreadUtils.sleep(1000);
                     ThreadUtils.notify(sharedState.getMonitor());
                 } else {
                     ThreadUtils.wait(sharedState.getMonitor());
@@ -33,15 +31,18 @@ public class ThreadTask implements Runnable {
         return isFirst ?
                 (
                         sharedState.getFirstUpOrDownFlag().get() ?
-                                sharedState.getFirstCounter().getAndIncrement() : sharedState.getFirstCounter().getAndDecrement()
+                                sharedState.getFirstCounter().getAndIncrement() :
+                                sharedState.getFirstCounter().getAndDecrement()
                 ) :
                 (
                         sharedState.getSecondUpOrDownFlag().get() ?
-                                sharedState.getSecondCounter().getAndIncrement() : sharedState.getSecondCounter().getAndDecrement()
+                                sharedState.getSecondCounter().getAndIncrement() :
+                                sharedState.getSecondCounter().getAndDecrement()
                 );
     }
 
-    private void handleFlag(final boolean inRange) {
+    private void handleFlag() {
+        final boolean inRange = inRange();
         if (isFirst) {
             if (!inRange) {
                 sharedState.getFirstUpOrDownFlag().set(!sharedState.getFirstUpOrDownFlag().get());

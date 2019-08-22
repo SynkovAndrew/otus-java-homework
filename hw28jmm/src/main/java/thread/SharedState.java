@@ -17,8 +17,8 @@ public class SharedState {
         this.maxAmplitude = maxAmplitude;
         this.firstCounter = new AtomicInteger(minAmplitude);
         this.secondCounter = new AtomicInteger(minAmplitude);
-        this.firstUpOrDownFlag = new AtomicBoolean(true);
-        this.secondUpOrDownFlag = new AtomicBoolean(true);
+        this.firstUpOrDownFlag = new AtomicBoolean(false);
+        this.secondUpOrDownFlag = new AtomicBoolean(false);
         this.monitor = new Object();
     }
 
