@@ -23,7 +23,6 @@ public class CacheEngineImpl<K, V> implements CacheEngine<K, V> {
         this.hit = new AtomicInteger(0);
     }
 
-
     @Override
     public void put(K key, V value) {
         if (elements.size() == maxElements) {
