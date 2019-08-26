@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.4.0/sockjs.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script type="text/javascript" src="users.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css"/>
+</head>
+<body onload="renderPage()">
+<div id="creteUserForm">
+    <form id="create-user-form" action="#">
+        <b>Name:</b><br>
+        <input type="text" id="name-input" name="name"><br>
+        <b>Age:</b><br>
+        <input type="text" id="age-input" name="age"><br><br>
+        <input id="create-button" type="submit" value="create">
+    </form>
+</div>
+<br>
+<br>
+<div id="userContainer"></div>
+</body>
+</html>
