@@ -15,7 +15,6 @@ public class UserController {
     private final MessageSystem messageSystem;
 
     @MessageMapping("/user")
-    /*    @SendTo("/topic/messages")*/
     public void handleCreateUser(final CreateUserRequestDTO request) throws InterruptedException {
         logger.info("Handling request: {}", request);
         final var message = messageSystem.createDatabaseMessage(request);

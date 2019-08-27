@@ -5,7 +5,6 @@ import com.otus.java.ioc.dto.FindUsersResponseDTO;
 import com.otus.java.ioc.messaging.message.*;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -14,8 +13,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
-import static com.otus.java.ioc.configuration.Constant.DATABASE_SERVICE_QUALIFIER;
-import static com.otus.java.ioc.configuration.Constant.FRONT_END_SERVICE_QUALIFIER;
 import static com.otus.java.ioc.messaging.message.Queue.*;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.function.Function.identity;
@@ -29,7 +26,7 @@ public class MessageSystem {
     private final Map<Queue, ExecutorService> executors;
     private final Map<Queue, Runnable> tasks;
 
-    private MessageClient frontEndService;
+    private FrontEndService frontEndService;
     private MessageClient databaseService;
 
     public MessageSystem() {
@@ -92,12 +89,12 @@ public class MessageSystem {
     }
 
     @Autowired
-    public void setFrontEndService(@Qualifier(value = FRONT_END_SERVICE_QUALIFIER) final MessageClient frontEndService) {
+    public void setFrontEndService(final FrontEndService frontEndService) {
         this.frontEndService = frontEndService;
     }
 
     @Autowired
-    public void setDatabaseService(@Qualifier(value = DATABASE_SERVICE_QUALIFIER) final MessageClient databaseService) {
+    public void setDatabaseService(final DatabaseService databaseService) {
         this.databaseService = databaseService;
     }
 }

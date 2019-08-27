@@ -7,20 +7,15 @@ import com.otus.java.ioc.service.MappingService;
 import com.otus.java.ioc.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import static com.otus.java.ioc.configuration.Constant.DATABASE_SERVICE_QUALIFIER;
 import static com.otus.java.ioc.service.MappingService.mapAsResponse;
 
 @Service
-@Qualifier(value = DATABASE_SERVICE_QUALIFIER)
 public class DatabaseService extends MessageClient<CreateUserRequestDTO> {
     private static Logger logger = LoggerFactory.getLogger(DatabaseService.class);
     private final UserService userService;
 
-    @Autowired
     public DatabaseService(final UserService userService) {
         this.userService = userService;
     }
