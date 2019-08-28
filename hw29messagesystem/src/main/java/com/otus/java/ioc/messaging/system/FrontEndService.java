@@ -1,14 +1,16 @@
 package com.otus.java.ioc.messaging.system;
 
+import com.otus.java.ioc.dto.CreateUserRequestDTO;
 import com.otus.java.ioc.dto.FindUsersResponseDTO;
 import com.otus.java.ioc.messaging.message.Message;
 import com.otus.java.ioc.messaging.message.MessageClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Controller;
 
-@Service
+@Controller
 public class FrontEndService extends MessageClient<FindUsersResponseDTO> {
     private static Logger logger = LoggerFactory.getLogger(FrontEndService.class);
     private final SimpMessagingTemplate messagingTemplate;
@@ -17,10 +19,16 @@ public class FrontEndService extends MessageClient<FindUsersResponseDTO> {
         this.messagingTemplate = messagingTemplate;
     }
 
+    @MessageMapping("/user")
+    public void handleCreateUser(final CreateUserRequestDTO request) throws InterruptedException {
+        logger.info("Handling request: {}", request);
+        final var message = messageSystem.createDatabaseMessage(request);
+        messageSystem.sendMessage(message);
+    }
+
     @Override
     public void accept(final Message<FindUsersResponseDTO> message) throws InterruptedException {
         logger.info("Message's been received: {}", message);
-        final var content = message.getContent();
-        messagingTemplate.convertAndSend("/topic/users", content.getContent());
+        messagingTemplate.convertAndSend("/topic/users", message.getContent().getContent());
     }
 }
