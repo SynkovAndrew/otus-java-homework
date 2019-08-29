@@ -1,9 +1,9 @@
 package com.otus.java.ioc.messaging.system;
 
-import com.otus.java.ioc.dto.CreateUserRequestDTO;
-import com.otus.java.ioc.dto.FindUsersResponseDTO;
 import com.otus.java.ioc.messaging.message.Message;
 import com.otus.java.ioc.messaging.message.MessageClient;
+import dto.CreateUserRequestDTO;
+import dto.FindUsersResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;

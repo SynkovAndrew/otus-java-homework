@@ -1,6 +1,6 @@
 package com.otus.java.ioc.messaging.message;
 
-import com.otus.java.ioc.dto.FindUsersResponseDTO;
+import dto.FindUsersResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

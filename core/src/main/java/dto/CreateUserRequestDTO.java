@@ -1,4 +1,4 @@
-package com.otus.java.ioc.dto;
+package dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

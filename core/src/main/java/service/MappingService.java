@@ -1,9 +1,9 @@
-package com.otus.java.ioc.service;
+package service;
 
-import com.otus.java.ioc.dto.CreateUserRequestDTO;
-import com.otus.java.ioc.dto.FindUsersResponseDTO;
-import com.otus.java.ioc.dto.UserDTO;
 import domain.User;
+import dto.CreateUserRequestDTO;
+import dto.FindUsersResponseDTO;
+import dto.UserDTO;
 
 import java.util.List;
 import java.util.stream.Collectors;
