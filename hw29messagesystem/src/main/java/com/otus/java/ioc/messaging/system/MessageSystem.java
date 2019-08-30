@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +46,10 @@ public class MessageSystem {
     @PostConstruct
     void init() {
         executors.forEach((queue, executor) -> executor.execute(tasks.get(queue)));
+    }
+
+    @PreDestroy
+    void destroy() {
         executors.forEach((queue, executor) -> executor.shutdown());
     }
 
