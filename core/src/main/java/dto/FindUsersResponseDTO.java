@@ -11,6 +11,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FindUsersResponseDTO {
+public class FindUsersResponseDTO extends ParentDTO {
     private List<UserDTO> content;
 }

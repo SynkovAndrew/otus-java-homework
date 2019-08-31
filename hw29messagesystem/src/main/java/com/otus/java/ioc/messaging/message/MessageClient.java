@@ -2,6 +2,7 @@ package com.otus.java.ioc.messaging.message;
 
 import com.otus.java.ioc.messaging.system.MessageSystem;
 import lombok.RequiredArgsConstructor;
+import message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @RequiredArgsConstructor

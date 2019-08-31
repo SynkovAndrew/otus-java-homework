@@ -1,14 +1,17 @@
 package com.otus.java.ioc.messaging.system;
 
-import com.otus.java.ioc.messaging.message.Message;
 import com.otus.java.ioc.messaging.message.MessageClient;
 import dto.CreateUserRequestDTO;
 import dto.FindUsersResponseDTO;
+import message.Message;
+import message.MessageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+
+import static message.MessageUtils.*;
 
 @Controller
 public class FrontEndService extends MessageClient<FindUsersResponseDTO> {
@@ -22,7 +25,7 @@ public class FrontEndService extends MessageClient<FindUsersResponseDTO> {
     @MessageMapping("/user")
     public void handleCreateUser(final CreateUserRequestDTO request) throws InterruptedException {
         logger.info("Handling request: {}", request);
-        final var message = messageSystem.createDatabaseMessage(request);
+        final var message = createDatabaseMessage(request);
         messageSystem.sendMessage(message);
     }
 

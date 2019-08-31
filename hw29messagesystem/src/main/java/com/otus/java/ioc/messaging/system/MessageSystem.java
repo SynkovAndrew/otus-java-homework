@@ -1,9 +1,9 @@
 package com.otus.java.ioc.messaging.system;
 
 
-import com.otus.java.ioc.messaging.message.*;
-import dto.CreateUserRequestDTO;
-import dto.FindUsersResponseDTO;
+import com.otus.java.ioc.messaging.message.MessageClient;
+import message.Message;
+import message.Queue;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,10 +15,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
-import static com.otus.java.ioc.messaging.message.Queue.*;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static message.Queue.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
@@ -80,18 +80,6 @@ public class MessageSystem {
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    public CreateUserMessage createDatabaseMessage(final CreateUserRequestDTO content) {
-        return CreateUserMessage.builder()
-                .content(content)
-                .build();
-    }
-
-    public FindUsersMessage createFrontEndMessage(final FindUsersResponseDTO content) {
-        return FindUsersMessage.builder()
-                .content(content)
-                .build();
     }
 
     @Autowired

@@ -4,7 +4,7 @@ const connect = () => {
     stompClient.connect({}, (frame) => {
         stompClient.subscribe(pathname + 'topic/users', (users) => {
             document.getElementById("userContainer").innerHTML =
-                createUserTable(JSON.parse(users.body));
+                createUserTable(JSON.parse(users.body).content);
         });
     });
 };
