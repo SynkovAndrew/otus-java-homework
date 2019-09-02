@@ -8,10 +8,7 @@ import messageV2.AbstractMessageService;
 import messageV2.Message;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.io.IOException;
-
+import static messageV2.MessageSocketService.sendMessage;
 import static messageV2.Queue.OUTPUT_QUEUE;
 
 @Service
@@ -19,7 +16,7 @@ import static messageV2.Queue.OUTPUT_QUEUE;
 public class DatabaseService extends AbstractMessageService {
     private final UserServiceAdapter userService;
 
-    public DatabaseService(UserServiceAdapter userService) throws IOException {
+    public DatabaseService(UserServiceAdapter userService) {
         super();
         this.userService = userService;
     }
@@ -31,14 +28,15 @@ public class DatabaseService extends AbstractMessageService {
         // TODO: Think about a way to overcome class casting !!!
         userService.createUser((CreateUserRequestDTO) message.getContent());
 
-        final FindUsersResponseDTO users = userService.findUsers();
-        final Message<FindUsersResponseDTO> outputMessage = new Message<>(users);
+        final FindUsersResponseDTO response = userService.findUsers();
+        final Message<FindUsersResponseDTO> outputMessage = new Message<>(response, response.getClass().getName());
         queues.get(OUTPUT_QUEUE).add(outputMessage);
         log.info("Message's been sent: {}", outputMessage);
     }
 
     @Override
     protected void handleOutputQueueMessage(final Message<? extends ParentDTO> message) {
-
+        sendMessage(socket, message);
+        log.info("Message's been sent to message server: {}", message);
     }
 }

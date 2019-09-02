@@ -1,22 +1,21 @@
 package com.otus.multiprocessing.messageserver.socket;
 
-import com.otus.multiprocessing.messageserver.service.MessageMappingService;
 import dto.ParentDTO;
+import lombok.extern.slf4j.Slf4j;
 import messageV2.Message;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
-import static java.util.Objects.nonNull;
 import static java.util.concurrent.Executors.newFixedThreadPool;
+import static messageV2.MessageSocketService.receiveMessage;
+import static messageV2.MessageSocketService.sendMessage;
 
+@Slf4j
 public class SocketMessageProcessor implements MessageProcessor {
-    private static final String END_OF_MESSAGE = "EOM";
     private static final int THREAD_COUNT = 2;
 
     private final ExecutorService executorService;
@@ -30,56 +29,28 @@ public class SocketMessageProcessor implements MessageProcessor {
         this.executorService = newFixedThreadPool(THREAD_COUNT);
         this.inputQueue = new ArrayBlockingQueue<>(10);
         this.outputQueue = new ArrayBlockingQueue<>(10);
+        this.executorService.submit(() -> receiveMessage(socket, inputQueue));
+        this.executorService.submit(() -> sendMessage(socket, outputQueue));
     }
 
     @Override
     public Message<? extends ParentDTO> pool() {
-        return null;
+        return inputQueue.poll();
     }
 
     @Override
-    public void send(Message<? extends ParentDTO> message) {
-
+    public void send(final Message<? extends ParentDTO> message) {
+        outputQueue.add(message);
     }
 
     @Override
-    public Message<? extends ParentDTO> take() {
-        return null;
+    public Message<? extends ParentDTO> take() throws InterruptedException {
+        return inputQueue.take();
     }
 
     @Override
-    public void close() {
-
+    public void close() throws IOException {
+        socket.close();
+        executorService.shutdown();
     }
-
-    private void receiveMessage() {
-        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            final StringBuilder stringBuilder = new StringBuilder();
-            String inputLine;
-            while (nonNull(inputLine = reader.readLine())) {
-                if (END_OF_MESSAGE.equals(inputLine)) {
-                    final String json = stringBuilder.toString();
-                    final var o = MessageMappingService.mapToObject(json);
-
-                    Message message = getMessageFromGson(json);
-                    input.add(message);
-                    stringBuilder = new StringBuilder();
-                }
-                stringBuilder.append(inputLine);
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Message getMessageFromGson(String json) throws ClassNotFoundException {
-
-        JsonParser parser = new JsonParser();
-        JsonObject jsonObject = (JsonObject) parser.parse(json);
-        //String className = String.valueOf(jsonObject.get(Message.CLASS_NAME_VARIABLE));
-        Class<?> messageClass = PingMessage.class;
-
-        return (Message) new Gson().fromJson(json, messageClass);
-    }
-
 }

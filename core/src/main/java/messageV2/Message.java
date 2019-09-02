@@ -10,4 +10,5 @@ import lombok.ToString;
 @ToString
 public class Message<T extends ParentDTO> {
     private final T content;
+    private final String className;
 }
