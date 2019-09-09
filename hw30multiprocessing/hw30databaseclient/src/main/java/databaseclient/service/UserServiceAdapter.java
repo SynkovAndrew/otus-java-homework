@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 import static service.MappingService.map;
 import static service.MappingService.mapAsResponse;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class UserServiceAdapter {
     private final UserService userService;
 

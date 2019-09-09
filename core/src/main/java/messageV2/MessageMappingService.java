@@ -7,7 +7,6 @@ import dto.ParentDTO;
 
 import java.util.Map;
 
-import static org.apache.commons.lang3.StringUtils.remove;
 import static org.apache.commons.lang3.StringUtils.substringBetween;
 
 public class MessageMappingService {
@@ -18,9 +17,11 @@ public class MessageMappingService {
     );
 
     public static Message<? extends ParentDTO> mapToObject(final String json) {
-        final var className = remove(substringBetween(json, "className:", ","), "\"");
+        final var className = substringBetween(json, "\"className\":\"", "\"");
+        final var content = substringBetween(json, "\"content\":", ",\"className");
+
         final Class<? extends ParentDTO> clazz = classes.get(className);
-        final ParentDTO object = gson.fromJson(json, clazz);
+        final ParentDTO object = gson.fromJson(content, clazz);
         return new Message<>(object, className);
     }
 

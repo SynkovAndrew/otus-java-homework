@@ -29,7 +29,7 @@ public class DatabaseService extends AbstractMessageService {
         userService.createUser((CreateUserRequestDTO) message.getContent());
 
         final FindUsersResponseDTO response = userService.findUsers();
-        final Message<FindUsersResponseDTO> outputMessage = new Message<>(response, response.getClass().getName());
+        final Message<FindUsersResponseDTO> outputMessage = new Message<>(response, response.getClass().getSimpleName());
         queues.get(OUTPUT_QUEUE).add(outputMessage);
         log.info("Message's been sent: {}", outputMessage);
     }

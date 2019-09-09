@@ -10,7 +10,5 @@ public interface MessageProcessor {
 
     void send(Message<? extends ParentDTO> message);
 
-    Message<? extends ParentDTO> take() throws InterruptedException;
-
     void close() throws IOException;
 }

@@ -1,3 +1,7 @@
 socket.server:
-  host: localhost
-  port: 9999
+  frontend:
+    host: localhost
+    port: 9998
+  database:
+    host: localhost
+    port: 9999

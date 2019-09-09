@@ -20,17 +20,19 @@ public class SocketMessageProcessor implements MessageProcessor {
 
     private final ExecutorService executorService;
     private final Socket socket;
-
+    private final MessageProcessorType type;
     private final BlockingQueue<Message<? extends ParentDTO>> outputQueue;
     private final BlockingQueue<Message<? extends ParentDTO>> inputQueue;
 
-    public SocketMessageProcessor(final Socket socket) {
+    public SocketMessageProcessor(final Socket socket, final MessageProcessorType type) {
         this.socket = socket;
+        this.type = type;
         this.executorService = newFixedThreadPool(THREAD_COUNT);
         this.inputQueue = new ArrayBlockingQueue<>(10);
         this.outputQueue = new ArrayBlockingQueue<>(10);
-        this.executorService.submit(() -> receiveMessage(socket, inputQueue));
-        this.executorService.submit(() -> sendMessage(socket, outputQueue));
+        this.executorService.execute(() -> receiveMessage(socket, inputQueue));
+        this.executorService.execute(() -> sendMessage(socket, outputQueue));
+        log.info("Socket message processor {}'s been started", type);
     }
 
     @Override
@@ -40,12 +42,8 @@ public class SocketMessageProcessor implements MessageProcessor {
 
     @Override
     public void send(final Message<? extends ParentDTO> message) {
+        log.info("Message's been sent: {}", message);
         outputQueue.add(message);
-    }
-
-    @Override
-    public Message<? extends ParentDTO> take() throws InterruptedException {
-        return inputQueue.take();
     }
 
     @Override

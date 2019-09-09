@@ -23,7 +23,7 @@ public class FrontEndService extends AbstractMessageService {
 
     @MessageMapping("/user")
     public void handleCreateUser(final CreateUserRequestDTO request) {
-        final Message<CreateUserRequestDTO> message = new Message<>(request, request.getClass().getName());
+        final Message<CreateUserRequestDTO> message = new Message<>(request, request.getClass().getSimpleName());
         queues.get(INPUT_QUEUE).add(message);
         log.info("Message's been put to input queue: {}", message);
     }
