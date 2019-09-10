@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import static messageV2.MessageSocketService.sendMessage;
 import static messageV2.Queue.OUTPUT_QUEUE;
+import static socket.MessageProcessorType.DATABASE;
 
 @Service
 @Slf4j
@@ -17,26 +18,21 @@ public class DatabaseService extends AbstractMessageService {
     private final UserServiceAdapter userService;
 
     public DatabaseService(UserServiceAdapter userService) {
-        super();
+        super(DATABASE);
         this.userService = userService;
     }
 
     @Override
     protected void handleInputQueueMessage(final Message<? extends ParentDTO> message) {
-        log.info("Message's been received: {}", message);
-
         // TODO: Think about a way to overcome class casting !!!
         userService.createUser((CreateUserRequestDTO) message.getContent());
-
         final FindUsersResponseDTO response = userService.findUsers();
         final Message<FindUsersResponseDTO> outputMessage = new Message<>(response, response.getClass().getSimpleName());
         queues.get(OUTPUT_QUEUE).add(outputMessage);
-        log.info("Message's been sent: {}", outputMessage);
     }
 
     @Override
     protected void handleOutputQueueMessage(final Message<? extends ParentDTO> message) {
         sendMessage(socket, message);
-        log.info("Message's been sent to message server: {}", message);
     }
 }

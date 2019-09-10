@@ -1,11 +1,11 @@
 package com.otus.multiprocessing.messageserver.service;
 
-import com.otus.multiprocessing.messageserver.socket.MessageProcessor;
-import com.otus.multiprocessing.messageserver.socket.MessageProcessorType;
-import com.otus.multiprocessing.messageserver.socket.SocketMessageProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import socket.MessageProcessor;
+import socket.MessageProcessorType;
+import socket.SocketMessageProcessor;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -15,10 +15,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
-import static com.otus.multiprocessing.messageserver.socket.MessageProcessorType.DATABASE;
-import static com.otus.multiprocessing.messageserver.socket.MessageProcessorType.FRONTEND;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newFixedThreadPool;
+import static socket.MessageProcessorType.DATABASE;
+import static socket.MessageProcessorType.FRONTEND;
 
 @Service
 @Slf4j
@@ -75,9 +75,9 @@ public class MessageServer {
                     ofNullable(processor.pool()).ifPresent(message -> {
                         log.info("Processing the message {} from {}", message, type);
                         if (type.equals(DATABASE)) {
-                            messageProcessors.get(FRONTEND).send(message);
+                            messageProcessors.get(FRONTEND).put(message);
                         } else {
-                            messageProcessors.get(DATABASE).send(message);
+                            messageProcessors.get(DATABASE).put(message);
                         }
                     })
             );

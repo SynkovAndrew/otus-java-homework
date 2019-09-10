@@ -1,4 +1,4 @@
-package com.otus.multiprocessing.messageserver.socket;
+package socket;
 
 import dto.ParentDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +41,8 @@ public class SocketMessageProcessor implements MessageProcessor {
     }
 
     @Override
-    public void send(final Message<? extends ParentDTO> message) {
-        log.info("Message's been sent: {}", message);
+    public void put(final Message<? extends ParentDTO> message) {
+        log.info("Message {}'s been put to message processor {}", message, type);
         outputQueue.add(message);
     }
 

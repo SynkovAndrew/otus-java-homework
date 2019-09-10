@@ -3,6 +3,9 @@ package messageV2;
 import dto.ParentDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import socket.MessageProcessor;
+import socket.MessageProcessorType;
+import socket.SocketMessageProcessor;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -14,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -23,19 +27,25 @@ import static messageV2.Queue.OUTPUT_QUEUE;
 @Slf4j
 public abstract class AbstractMessageService {
     protected final Map<Queue, ArrayBlockingQueue<Message<? extends ParentDTO>>> queues;
-    protected final Map<Queue, Runnable> tasks;
-    protected final Map<Queue, ExecutorService> executors;
+    private final Map<Queue, Runnable> tasks;
+    private final Map<Queue, ExecutorService> queueExecutors;
+    private final ExecutorService messageExecutor;
+    private final MessageProcessorType type;
     protected Socket socket;
+    private MessageProcessor messageProcessor;
+
 
     @Value("${socket.server.host}")
     private String host;
     @Value("${socket.server.port}")
     private int port;
 
-    public AbstractMessageService() {
+    public AbstractMessageService(final MessageProcessorType type) {
+        this.type = type;
+        this.messageExecutor = newSingleThreadExecutor();
         this.queues = Stream.of(Queue.values())
                 .collect(toMap(identity(), queue -> new ArrayBlockingQueue<>(10)));
-        this.executors = Stream.of(Queue.values())
+        this.queueExecutors = Stream.of(Queue.values())
                 .collect(toMap(identity(), queue -> newSingleThreadExecutor()));
         this.tasks = Map.of(
                 INPUT_QUEUE, () -> processQueue(INPUT_QUEUE, this::handleInputQueueMessage),
@@ -45,16 +55,23 @@ public abstract class AbstractMessageService {
 
     @PostConstruct
     void init() throws IOException {
-        log.info("initializing...");
         this.socket = new Socket(host, port);
-        executors.forEach((queue, executor) -> executor.execute(tasks.get(queue)));
+        this.messageProcessor = new SocketMessageProcessor(socket, type);
+        messageExecutor.execute(() -> {
+            while (!messageExecutor.isShutdown()) {
+                ofNullable(messageProcessor.pool())
+                        .ifPresent(message -> queues.get(INPUT_QUEUE).add(message));
+            }
+        });
+        queueExecutors.forEach((queue, executor) -> executor.execute(tasks.get(queue)));
     }
 
     @PreDestroy
     void destroy() throws IOException {
-        log.info("destroying...");
         socket.close();
-        executors.forEach((queue, executor) -> executor.shutdown());
+        messageProcessor.close();
+        messageExecutor.shutdown();
+        queueExecutors.forEach((queue, executor) -> executor.shutdown());
     }
 
     private void processQueue(final Queue queue, final Consumer<Message<? extends ParentDTO>> consumer) {

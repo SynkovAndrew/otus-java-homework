@@ -28,7 +28,6 @@ public class MessageSocketService {
                     final Message<? extends ParentDTO> message = mapToObject(json);
                     queue.add(message);
                     log.info("Message's been received: {}", message);
-                    break;
                 }
                 stringBuilder.append(inputLine);
             }

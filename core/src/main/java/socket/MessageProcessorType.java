@@ -1,4 +1,4 @@
-package com.otus.multiprocessing.messageserver.socket;
+package socket;
 
 public enum MessageProcessorType {
     FRONTEND,
