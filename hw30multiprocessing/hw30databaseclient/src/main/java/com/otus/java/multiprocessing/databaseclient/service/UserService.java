@@ -1,8 +1,8 @@
-package databaseclient.service;
+package com.otus.java.multiprocessing.databaseclient.service;
 
 
-import databaseclient.cache.UserCacheEngine;
-import databaseclient.repository.UserDAO;
+import com.otus.java.multiprocessing.databaseclient.cache.UserCacheEngine;
+import com.otus.java.multiprocessing.databaseclient.repository.UserDAO;
 import domain.User;
 import org.springframework.stereotype.Service;
 import service.DbServiceImpl;

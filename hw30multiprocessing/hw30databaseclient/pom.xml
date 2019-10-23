@@ -5,11 +5,11 @@
     <parent>
         <artifactId>hw30-multiprocessing</artifactId>
         <groupId>com.otus.java</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>hw30-databaseclient</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>hw30-database-client</artifactId>
+    <version>1.0</version>
 
     <dependencies>
         <dependency>
@@ -73,11 +73,17 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <mainClass>com.otus.java.multiprocessing.databaseclient.DatabaseClientApplication</mainClass>
                     <addResources>true</addResources>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
-
-
 </project>

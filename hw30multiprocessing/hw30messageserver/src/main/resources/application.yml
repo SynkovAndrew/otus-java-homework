@@ -1,7 +1,15 @@
 socket.server:
   frontend:
-    host: localhost
-    port: 9998
+    first:
+      host: localhost
+      port: 9000
+    second:
+      host: localhost
+      port: 9001
   database:
-    host: localhost
-    port: 9999
+    first:
+      host: localhost
+      port: 9010
+    second:
+      host: localhost
+      port: 9011

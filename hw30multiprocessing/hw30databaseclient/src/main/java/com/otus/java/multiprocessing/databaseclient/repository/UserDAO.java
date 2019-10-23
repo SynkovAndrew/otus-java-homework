@@ -1,4 +1,4 @@
-package databaseclient.repository;
+package com.otus.java.multiprocessing.databaseclient.repository;
 
 import domain.User;
 import org.hibernate.SessionFactory;

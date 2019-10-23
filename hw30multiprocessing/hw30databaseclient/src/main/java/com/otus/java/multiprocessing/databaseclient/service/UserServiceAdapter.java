@@ -1,4 +1,4 @@
-package databaseclient.service;
+package com.otus.java.multiprocessing.databaseclient.service;
 
 import dto.CreateUserRequestDTO;
 import dto.FindUsersResponseDTO;

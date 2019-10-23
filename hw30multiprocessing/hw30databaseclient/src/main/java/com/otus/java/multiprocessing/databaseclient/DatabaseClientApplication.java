@@ -1,4 +1,4 @@
-package databaseclient;
+package com.otus.java.multiprocessing.databaseclient;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

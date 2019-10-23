@@ -1,4 +1,4 @@
 spring.thymeleaf.cache: false
 socket.server:
   host: localhost
-  port: 9998
+  port: 9000

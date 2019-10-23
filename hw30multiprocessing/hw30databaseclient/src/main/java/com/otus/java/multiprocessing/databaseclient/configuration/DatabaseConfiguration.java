@@ -1,4 +1,4 @@
-package databaseclient.configuration;
+package com.otus.java.multiprocessing.databaseclient.configuration;
 
 import domain.Address;
 import domain.Phone;

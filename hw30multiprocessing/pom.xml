@@ -6,11 +6,12 @@
 
     <groupId>com.otus.java</groupId>
     <artifactId>hw30-multiprocessing</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <packaging>pom</packaging>
 
     <modules>
         <module>hw30frontendclient</module>
+        <module>hw30databaseclient</module>
         <module>hw30messageserver</module>
     </modules>
 

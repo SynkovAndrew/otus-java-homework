@@ -1,4 +1,4 @@
-package databaseclient.cache;
+package com.otus.java.multiprocessing.databaseclient.cache;
 
 import cache.CacheEngineImpl;
 import domain.User;
