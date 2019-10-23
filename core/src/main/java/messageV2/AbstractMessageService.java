@@ -11,6 +11,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -18,7 +19,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static java.util.Optional.ofNullable;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static messageV2.Queue.INPUT_QUEUE;
@@ -26,67 +27,68 @@ import static messageV2.Queue.OUTPUT_QUEUE;
 
 @Slf4j
 public abstract class AbstractMessageService {
-    protected final Map<Queue, ArrayBlockingQueue<Message<? extends ParentDTO>>> queues;
-    private final Map<Queue, Runnable> tasks;
-    private final Map<Queue, ExecutorService> queueExecutors;
-    private final ExecutorService messageExecutor;
+    private static final int THREAD_COUNT = 4;
+    private final ExecutorService executorService;
+    private final Map<Queue, ArrayBlockingQueue<Message<? extends ParentDTO>>> queues;
+    private final List<Runnable> tasks;
     private final MessageProcessorType type;
     protected Socket socket;
-    private MessageProcessor messageProcessor;
-
-
     @Value("${socket.server.host}")
     private String host;
+    private MessageProcessor messageProcessor;
     @Value("${socket.server.port}")
     private int port;
 
     public AbstractMessageService(final MessageProcessorType type) {
         this.type = type;
-        this.messageExecutor = newSingleThreadExecutor();
+        this.executorService = newFixedThreadPool(THREAD_COUNT);
         this.queues = Stream.of(Queue.values())
                 .collect(toMap(identity(), queue -> new ArrayBlockingQueue<>(10)));
-        this.queueExecutors = Stream.of(Queue.values())
-                .collect(toMap(identity(), queue -> newSingleThreadExecutor()));
-        this.tasks = Map.of(
-                INPUT_QUEUE, () -> processQueue(INPUT_QUEUE, this::handleInputQueueMessage),
-                OUTPUT_QUEUE, () -> processQueue(OUTPUT_QUEUE, this::handleOutputQueueMessage)
+        this.tasks = List.of(
+                () -> processQueue(OUTPUT_QUEUE, this::handleOutputQueueMessage),
+                this::pollFromMessageProcessor,
+                this::putToMessageProcessor
         );
-    }
-
-    @PostConstruct
-    void init() throws IOException {
-        this.socket = new Socket(host, port);
-        this.messageProcessor = new SocketMessageProcessor(socket, type);
-        messageExecutor.execute(() -> {
-            while (!messageExecutor.isShutdown()) {
-                ofNullable(messageProcessor.pool())
-                        .ifPresent(message -> queues.get(INPUT_QUEUE).add(message));
-            }
-        });
-        queueExecutors.forEach((queue, executor) -> executor.execute(tasks.get(queue)));
     }
 
     @PreDestroy
     void destroy() throws IOException {
         socket.close();
         messageProcessor.close();
-        messageExecutor.shutdown();
-        queueExecutors.forEach((queue, executor) -> executor.shutdown());
+        executorService.shutdown();
+    }
+
+    protected abstract void handleOutputQueueMessage(final Message<? extends ParentDTO> message);
+
+    @PostConstruct
+    void init() throws IOException {
+        this.socket = new Socket(host, port);
+        this.messageProcessor = new SocketMessageProcessor(socket, type);
+        tasks.forEach(executorService::execute);
+    }
+
+    private void pollFromMessageProcessor() {
+        while (!executorService.isShutdown()) {
+            ofNullable(messageProcessor.pool())
+                    .ifPresent(message -> queues.get(OUTPUT_QUEUE).add(message));
+        }
     }
 
     private void processQueue(final Queue queue, final Consumer<Message<? extends ParentDTO>> consumer) {
         while (!Thread.currentThread().isInterrupted()) {
-            try {
-                final Message<? extends ParentDTO> message = queues.get(queue).take();
-                log.info("Processing input queue message: {}", message);
-                consumer.accept(message);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+            ofNullable(queues.get(queue).poll())
+                    .ifPresent(consumer::accept);
         }
     }
 
-    protected abstract void handleInputQueueMessage(final Message<? extends ParentDTO> message);
+    protected void putInInputQueue(final Message<? extends ParentDTO> message) {
+        queues.get(INPUT_QUEUE).add(message);
+    }
 
-    protected abstract void handleOutputQueueMessage(final Message<? extends ParentDTO> message);
+    private void putToMessageProcessor() {
+        while (!executorService.isShutdown()) {
+            ofNullable(queues.get(INPUT_QUEUE).poll())
+                    .ifPresent(message -> messageProcessor.put(message));
+        }
+    }
 }

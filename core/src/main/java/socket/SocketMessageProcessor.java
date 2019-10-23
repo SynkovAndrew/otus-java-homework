@@ -17,7 +17,6 @@ import static messageV2.MessageSocketService.sendMessage;
 @Slf4j
 public class SocketMessageProcessor implements MessageProcessor {
     private static final int THREAD_COUNT = 2;
-
     private final ExecutorService executorService;
     private final Socket socket;
     private final MessageProcessorType type;
@@ -30,20 +29,20 @@ public class SocketMessageProcessor implements MessageProcessor {
         this.executorService = newFixedThreadPool(THREAD_COUNT);
         this.inputQueue = new ArrayBlockingQueue<>(10);
         this.outputQueue = new ArrayBlockingQueue<>(10);
-        this.executorService.execute(() -> receiveMessage(socket, inputQueue));
-        this.executorService.execute(() -> sendMessage(socket, outputQueue));
+        this.executorService.execute(() -> receiveMessage(socket, outputQueue));
+        this.executorService.execute(() -> sendMessage(socket, inputQueue));
         log.info("Socket message processor {}'s been started", type);
     }
 
     @Override
     public Message<? extends ParentDTO> pool() {
-        return inputQueue.poll();
+        return outputQueue.poll();
     }
 
     @Override
     public void put(final Message<? extends ParentDTO> message) {
         log.info("Message {}'s been put to message processor {}", message, type);
-        outputQueue.add(message);
+        inputQueue.add(message);
     }
 
     @Override

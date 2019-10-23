@@ -9,8 +9,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import static messageV2.MessageSocketService.sendMessage;
-import static messageV2.Queue.OUTPUT_QUEUE;
 import static socket.MessageProcessorType.FRONTEND;
 
 
@@ -27,18 +25,12 @@ public class FrontEndService extends AbstractMessageService {
     @MessageMapping("/user")
     public void handleCreateUser(final CreateUserRequestDTO request) {
         final Message<CreateUserRequestDTO> message = new Message<>(request, request.getClass().getSimpleName());
-        queues.get(OUTPUT_QUEUE).add(message);
+        putInInputQueue(message);
         log.info("Message's been put to input queue: {}", message);
     }
 
     @Override
     public void handleOutputQueueMessage(final Message<? extends ParentDTO> message) {
-        sendMessage(socket, message);
-        log.info("Message's been sent to message server: {}", message);
-    }
-
-    @Override
-    public void handleInputQueueMessage(final Message<? extends ParentDTO> message) {
         messagingTemplate.convertAndSend("/topic/users", message.getContent());
         log.info("Message's been sent to front end: {}", message);
     }

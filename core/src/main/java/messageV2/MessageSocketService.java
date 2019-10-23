@@ -11,12 +11,13 @@ import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 
 import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
 import static messageV2.MessageMappingService.mapToJson;
 import static messageV2.MessageMappingService.mapToObject;
 
 @Slf4j
 public class MessageSocketService {
-    public static final String END_OF_MESSAGE = "EOM";
+    private static final String END_OF_MESSAGE = "EOM";
 
     public static void receiveMessage(final Socket socket, final BlockingQueue<Message<? extends ParentDTO>> queue) {
         try (final BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
@@ -27,7 +28,6 @@ public class MessageSocketService {
                     final String json = stringBuilder.toString();
                     final Message<? extends ParentDTO> message = mapToObject(json);
                     queue.add(message);
-                    log.info("Message's been received: {}", message);
                 }
                 stringBuilder.append(inputLine);
             }
@@ -38,26 +38,14 @@ public class MessageSocketService {
 
     public static void sendMessage(final Socket socket, final BlockingQueue<Message<? extends ParentDTO>> queue) {
         try (final PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
-            /*      while (socket.isConnected()) {*/
-            final Message<? extends ParentDTO> message = queue.take();
-            final String json = mapToJson(message);
-            out.println(json);
-            out.println(END_OF_MESSAGE);
-            log.info("Message's been send: {}", message);
-            /*       }*/
-        } catch (IOException | InterruptedException e) {
-            log.error(e.getMessage());
-        }
-    }
-
-    public static void sendMessage(final Socket socket, final Message<? extends ParentDTO> message) {
-        try (final PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
-            /*            while (socket.isConnected()) {*/
-            final String json = mapToJson(message);
-            out.println(json);
-            out.println(END_OF_MESSAGE);
-            log.info("Message's been send: {}", message);
-            /*    }*/
+            while (socket.isConnected()) {
+                ofNullable(queue.poll())
+                        .ifPresent(message -> {
+                            final String json = mapToJson(message);
+                            out.println(json);
+                            out.println(END_OF_MESSAGE);
+                        });
+            }
         } catch (IOException e) {
             log.error(e.getMessage());
         }
