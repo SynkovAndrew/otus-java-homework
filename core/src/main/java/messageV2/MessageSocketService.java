@@ -28,6 +28,7 @@ public class MessageSocketService {
                     final String json = stringBuilder.toString();
                     final Message<? extends ParentDTO> message = mapToObject(json);
                     queue.add(message);
+                    stringBuilder = new StringBuilder();
                 }
                 stringBuilder.append(inputLine);
             }

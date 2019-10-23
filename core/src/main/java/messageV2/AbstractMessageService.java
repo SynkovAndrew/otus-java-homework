@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.function.Function.identity;
@@ -61,8 +62,15 @@ public abstract class AbstractMessageService {
     protected abstract void handleOutputQueueMessage(final Message<? extends ParentDTO> message);
 
     @PostConstruct
-    void init() throws IOException {
-        this.socket = new Socket(host, port);
+    void init() throws InterruptedException {
+        while (isNull(this.socket)) {
+            Thread.sleep(3000);
+            log.info("Trying to set connection...");
+            try {
+                this.socket = new Socket(host, port);
+            } catch (Exception ignored) {
+            }
+        }
         this.messageProcessor = new SocketMessageProcessor(socket, type);
         tasks.forEach(executorService::execute);
     }
@@ -77,7 +85,7 @@ public abstract class AbstractMessageService {
     private void processQueue(final Queue queue, final Consumer<Message<? extends ParentDTO>> consumer) {
         while (!Thread.currentThread().isInterrupted()) {
             ofNullable(queues.get(queue).poll())
-                    .ifPresent(consumer::accept);
+                    .ifPresent(t -> consumer.accept(t));
         }
     }
 
