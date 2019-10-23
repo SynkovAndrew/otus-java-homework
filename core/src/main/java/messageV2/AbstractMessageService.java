@@ -65,7 +65,7 @@ public abstract class AbstractMessageService {
     void init() throws InterruptedException {
         while (isNull(this.socket)) {
             Thread.sleep(3000);
-            log.info("Trying to set connection...");
+            log.info("Trying to connect to {} ...", host + ":" + port);
             try {
                 this.socket = new Socket(host, port);
             } catch (Exception ignored) {
