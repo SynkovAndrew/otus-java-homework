@@ -1,5 +1,6 @@
 package com.otus.multiprocessing.messageserver.service;
 
+import com.otus.multiprocessing.messageserver.utils.ProcessUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import socket.MessageProcessor;
@@ -10,15 +11,14 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -28,22 +28,23 @@ import static socket.MessageProcessorType.FRONTEND;
 @Service
 @Slf4j
 public class MessageServer {
+    private final AtomicInteger number = new AtomicInteger(0);
     private static final int THREAD_COUNT = 20;
     private final ExecutorService executorService;
     private final Map<Integer, Map<MessageProcessorType, MessageProcessor>> messageProcessors;
     private final ProcessRunnerService processRunnerService;
-    private final List<Process> processes;
+    private final Map<Integer, Process> processes;
 
     public MessageServer(final ProcessRunnerService processRunnerService) {
         this.messageProcessors = new ConcurrentHashMap<>();
         this.executorService = newFixedThreadPool(THREAD_COUNT);
         this.processRunnerService = processRunnerService;
-        this.processes = newArrayList();
+        this.processes = newHashMap();
     }
 
     @PreDestroy
     void destroy() {
-        processes.forEach(Process::destroy);
+        processes.values().forEach(Process::destroy);
         messageProcessors.values().stream().flatMap(mp -> mp.values().stream()).forEach(p -> {
             try {
                 p.close();
@@ -61,50 +62,13 @@ public class MessageServer {
         processRunnerService.DATABASE_SOCKET_PORTS
                 .forEach(port -> executorService.execute(() -> processSocketConnection(processRunnerService.DATABASE_SOCKET_PORTS.indexOf(port), port, DATABASE)));
         Stream.of(MessageProcessorType.values()).forEach(type -> executorService.execute(() -> processMessages(type)));
-
-        processes.addAll(processRunnerService.prepareProcesses().stream().map(pb -> {
-            try {
-                return pb.start();
-            } catch (IOException e) {
-                log.error(e.getMessage());
-                return null;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.toList()));
-
-/*        final ProcessBuilder processBuilder1 = processRunnerService.getDatabaseClientProcessBuilder(
-                processRunnerService.DATABASE_SOCKET_PORTS.get(0)
+        processes.putAll(
+                processRunnerService.prepareProcesses().stream()
+                        .map(ProcessUtils::start)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toMap(p -> number.getAndIncrement(), p -> p))
         );
-        final ProcessBuilder processBuilder2 = processRunnerService.getFrontendClientProcessBuilder(
-                processRunnerService.FRONTEND_SOCKET_PORTS.get(0),
-                processRunnerService.FRONTEND_WEB_SERVER_PORTS.get(0)
-        );
-        final Process process1 = processBuilder1.start();
-        processes.add(process1);
-        final Process process2 = processBuilder2.start();
-        processes.add(process2);
-
-
-        executorService.execute(() -> {
-            try (final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process1.getInputStream()))) {
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    System.out.println(">>>>> 1111 " + line);
-                }
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
-        });
-        executorService.execute(() -> {
-            try (final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process2.getInputStream()))) {
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    System.out.println(">>>>> 2222 " + line);
-                }
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
-        });*/
-
+        processes.forEach((number, process) -> executorService.execute(() -> ProcessUtils.printLogs(number, process)));
     }
 
     private void processMessages(final MessageProcessorType type) {
