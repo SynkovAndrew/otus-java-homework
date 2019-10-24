@@ -15,13 +15,13 @@ import static service.MappingService.mapAsResponse;
 public class UserServiceAdapter {
     private final UserService userService;
 
-    public void createUser(final CreateUserRequestDTO request) {
+    void createUser(final CreateUserRequestDTO request) {
         final var user = map(request);
         userService.create(user);
         log.info("User's been created: {}", user);
     }
 
-    public FindUsersResponseDTO findUsers() {
+    FindUsersResponseDTO findUsers() {
         final var users = userService.loadAll();
         log.info("Users've been loaded: {}", users);
         return mapAsResponse(users);
