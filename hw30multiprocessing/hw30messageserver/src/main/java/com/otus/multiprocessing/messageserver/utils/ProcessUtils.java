@@ -22,7 +22,7 @@ public class ProcessUtils {
         try (final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                System.out.println("<<< " + id + " >>> " + line);
+                System.out.println("    < " + id + " > " + line);
             }
         } catch (IOException e) {
             log.error(e.getMessage());

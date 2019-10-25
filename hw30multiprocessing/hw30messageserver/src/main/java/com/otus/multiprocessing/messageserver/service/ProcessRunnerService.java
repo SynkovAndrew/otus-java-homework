@@ -64,7 +64,8 @@ public class ProcessRunnerService {
     List<ProcessBuilder> prepareProcesses() {
         return Stream.concat(
                 DATABASE_SOCKET_PORTS.stream().map(this::getDatabaseClientProcessBuilder),
-                FRONTEND_SOCKET_PORTS.stream().map(port -> getFrontendClientProcessBuilder(port, FRONTEND_WEB_SERVER_PORTS.get(FRONTEND_SOCKET_PORTS.indexOf(port))))
+                FRONTEND_SOCKET_PORTS.stream().map(port -> getFrontendClientProcessBuilder(
+                        port, FRONTEND_WEB_SERVER_PORTS.get(FRONTEND_SOCKET_PORTS.indexOf(port))))
         ).collect(toList());
     }
 }

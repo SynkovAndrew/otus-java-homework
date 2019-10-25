@@ -3,6 +3,7 @@ package socket;
 import dto.ParentDTO;
 import lombok.extern.slf4j.Slf4j;
 import messageV2.Message;
+import utils.InstanceInfoUtils;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -18,10 +19,10 @@ import static messageV2.MessageSocketService.sendMessage;
 public class SocketMessageProcessor implements MessageProcessor {
     private static final int THREAD_COUNT = 2;
     private final ExecutorService executorService;
+    private final BlockingQueue<Message<? extends ParentDTO>> inputQueue;
+    private final BlockingQueue<Message<? extends ParentDTO>> outputQueue;
     private final Socket socket;
     private final MessageProcessorType type;
-    private final BlockingQueue<Message<? extends ParentDTO>> outputQueue;
-    private final BlockingQueue<Message<? extends ParentDTO>> inputQueue;
 
     public SocketMessageProcessor(final Socket socket, final MessageProcessorType type) {
         this.socket = socket;
@@ -35,6 +36,22 @@ public class SocketMessageProcessor implements MessageProcessor {
     }
 
     @Override
+    public void close() throws IOException {
+        socket.close();
+        executorService.shutdown();
+    }
+
+    @Override
+    public String getInstanceId() {
+        return InstanceInfoUtils.generateInstanceId(socket.getInetAddress().getHostName(), socket.getPort(), type);
+    }
+
+    @Override
+    public MessageProcessorType getType() {
+        return type;
+    }
+
+    @Override
     public Message<? extends ParentDTO> pool() {
         return outputQueue.poll();
     }
@@ -43,11 +60,5 @@ public class SocketMessageProcessor implements MessageProcessor {
     public void put(final Message<? extends ParentDTO> message) {
         log.info("Message {}'s been put to message processor {}", message, type);
         inputQueue.add(message);
-    }
-
-    @Override
-    public void close() throws IOException {
-        socket.close();
-        executorService.shutdown();
     }
 }

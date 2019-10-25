@@ -25,7 +25,8 @@ public class DatabaseService extends AbstractMessageService {
         // TODO: Think about a way to overcome class casting !!!
         userService.createUser((CreateUserRequestDTO) message.getContent());
         final FindUsersResponseDTO response = userService.findUsers();
-        final Message<FindUsersResponseDTO> responseMessage = new Message<>(response, response.getClass().getSimpleName());
+        final var responseMessage = new Message<>(
+                response.getClass().getSimpleName(), response, getInstanceId());
         putInInputQueue(responseMessage);
     }
 }

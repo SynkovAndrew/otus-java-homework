@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Optional.ofNullable;
@@ -28,10 +27,10 @@ import static socket.MessageProcessorType.FRONTEND;
 @Service
 @Slf4j
 public class MessageServer {
-    private final AtomicInteger number = new AtomicInteger(0);
     private static final int THREAD_COUNT = 20;
     private final ExecutorService executorService;
     private final Map<Integer, Map<MessageProcessorType, MessageProcessor>> messageProcessors;
+    private final AtomicInteger number = new AtomicInteger(0);
     private final ProcessRunnerService processRunnerService;
     private final Map<Integer, Process> processes;
 
@@ -61,28 +60,35 @@ public class MessageServer {
                 .forEach(port -> executorService.execute(() -> processSocketConnection(processRunnerService.FRONTEND_SOCKET_PORTS.indexOf(port), port, FRONTEND)));
         processRunnerService.DATABASE_SOCKET_PORTS
                 .forEach(port -> executorService.execute(() -> processSocketConnection(processRunnerService.DATABASE_SOCKET_PORTS.indexOf(port), port, DATABASE)));
-        Stream.of(MessageProcessorType.values()).forEach(type -> executorService.execute(() -> processMessages(type)));
-        processes.putAll(
-                processRunnerService.prepareProcesses().stream()
-                        .map(ProcessUtils::start)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toMap(p -> number.getAndIncrement(), p -> p))
-        );
-        processes.forEach((number, process) -> executorService.execute(() -> ProcessUtils.printLogs(number, process)));
+        executorService.execute(() -> processMessages());
+        executorService.execute(() -> processMessages());
+        executorService.execute(() -> processMessages());
+        executorService.execute(() -> processMessages());
+        executorService.execute(() -> processMessages());
     }
 
-    private void processMessages(final MessageProcessorType type) {
+    private void processMessages() {
         while (!executorService.isShutdown()) {
-            messageProcessors.forEach((number, mp) -> ofNullable(mp.get(type))
-                    .ifPresent(p -> ofNullable(p.pool()).ifPresent(message -> {
-                                log.info("Processing the message {} from {}-{}", message, type, number);
-                                if (type.equals(DATABASE)) {
-                                    mp.get(FRONTEND).put(message);
-                                } else {
-                                    mp.get(DATABASE).put(message);
-                                }
-                            })
-                    ));
+            messageProcessors.forEach(
+                    (number, messageProcessorMap) -> messageProcessorMap.values().forEach(
+                            mp -> ofNullable(mp.pool())
+                                    .ifPresent(message -> {
+                                        if (FRONTEND.equals(mp.getType())) {
+                                            messageProcessors.values().stream()
+                                                    .flatMap(entry -> entry.values().stream())
+                                                    .filter(p -> DATABASE.equals(p.getType()))
+                                                    .findAny()
+                                                    .ifPresent(p -> p.put(message));
+                                        } else {
+                                            messageProcessors.values().stream()
+                                                    .flatMap(entry -> entry.values().stream())
+                                                    .filter(p -> Objects.equals(p.getInstanceId(), message.getInstanceId()))
+                                                    .findFirst()
+                                                    .ifPresent(p -> p.put(message));
+                                        }
+                                    })
+                    )
+            );
         }
     }
 
@@ -94,7 +100,7 @@ public class MessageServer {
                 if (messageProcessors.containsKey(number)) {
                     messageProcessors.get(number).put(type, messageProcessor);
                 } else {
-                    final Map<MessageProcessorType, MessageProcessor> map = newHashMap();
+                    final Map<MessageProcessorType, MessageProcessor> map = new ConcurrentHashMap();
                     map.put(type, messageProcessor);
                     messageProcessors.put(number, map);
                 }

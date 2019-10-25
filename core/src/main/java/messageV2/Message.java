@@ -9,6 +9,7 @@ import lombok.ToString;
 @Getter
 @ToString
 public class Message<T extends ParentDTO> {
-    private final T content;
     private final String className;
+    private final T content;
+    private final String instanceId;
 }

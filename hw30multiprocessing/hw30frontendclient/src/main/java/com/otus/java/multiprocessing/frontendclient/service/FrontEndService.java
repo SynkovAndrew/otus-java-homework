@@ -24,7 +24,8 @@ public class FrontEndService extends AbstractMessageService {
 
     @MessageMapping("/user")
     public void handleCreateUser(final CreateUserRequestDTO request) {
-        final Message<CreateUserRequestDTO> message = new Message<>(request, request.getClass().getSimpleName());
+        final var message = new Message<>(
+                request.getClass().getSimpleName(), request, getInstanceId());
         putInInputQueue(message);
         log.info("Message's been put to input queue: {}", message);
     }

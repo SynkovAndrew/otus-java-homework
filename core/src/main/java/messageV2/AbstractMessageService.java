@@ -1,11 +1,13 @@
 package messageV2;
 
 import dto.ParentDTO;
+import instance.Instance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import socket.MessageProcessor;
 import socket.MessageProcessorType;
 import socket.SocketMessageProcessor;
+import utils.InstanceInfoUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -27,7 +29,7 @@ import static messageV2.Queue.INPUT_QUEUE;
 import static messageV2.Queue.OUTPUT_QUEUE;
 
 @Slf4j
-public abstract class AbstractMessageService {
+public abstract class AbstractMessageService implements Instance {
     private static final int THREAD_COUNT = 4;
     private final ExecutorService executorService;
     private final Map<Queue, ArrayBlockingQueue<Message<? extends ParentDTO>>> queues;
@@ -59,6 +61,11 @@ public abstract class AbstractMessageService {
         executorService.shutdown();
     }
 
+    @Override
+    public String getInstanceId() {
+        return InstanceInfoUtils.generateInstanceId(host, port, type);
+    }
+
     protected abstract void handleOutputQueueMessage(final Message<? extends ParentDTO> message);
 
     @PostConstruct
@@ -85,7 +92,7 @@ public abstract class AbstractMessageService {
     private void processQueue(final Queue queue, final Consumer<Message<? extends ParentDTO>> consumer) {
         while (!Thread.currentThread().isInterrupted()) {
             ofNullable(queues.get(queue).poll())
-                    .ifPresent(t -> consumer.accept(t));
+                    .ifPresent(consumer::accept);
         }
     }
 
