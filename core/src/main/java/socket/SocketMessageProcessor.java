@@ -43,7 +43,7 @@ public class SocketMessageProcessor implements MessageProcessor {
 
     @Override
     public String getInstanceId() {
-        return InstanceInfoUtils.generateInstanceId(socket.getInetAddress().getHostName(), socket.getPort(), type);
+        return InstanceInfoUtils.generateInstanceId(socket.getInetAddress().getHostAddress(), socket.getLocalPort(), type);
     }
 
     @Override

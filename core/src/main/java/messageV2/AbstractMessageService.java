@@ -63,7 +63,7 @@ public abstract class AbstractMessageService implements Instance {
 
     @Override
     public String getInstanceId() {
-        return InstanceInfoUtils.generateInstanceId(host, port, type);
+        return InstanceInfoUtils.generateInstanceId(socket.getInetAddress().getHostAddress(), socket.getPort(), type);
     }
 
     protected abstract void handleOutputQueueMessage(final Message<? extends ParentDTO> message);

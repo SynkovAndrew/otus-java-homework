@@ -18,7 +18,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static socket.MessageProcessorType.DATABASE;
@@ -38,7 +37,7 @@ public class MessageServer {
         this.messageProcessors = new ConcurrentHashMap<>();
         this.executorService = newFixedThreadPool(THREAD_COUNT);
         this.processRunnerService = processRunnerService;
-        this.processes = newHashMap();
+        this.processes = new ConcurrentHashMap<>();
     }
 
     @PreDestroy
@@ -61,10 +60,13 @@ public class MessageServer {
         processRunnerService.DATABASE_SOCKET_PORTS
                 .forEach(port -> executorService.execute(() -> processSocketConnection(processRunnerService.DATABASE_SOCKET_PORTS.indexOf(port), port, DATABASE)));
         executorService.execute(() -> processMessages());
-        executorService.execute(() -> processMessages());
-        executorService.execute(() -> processMessages());
-        executorService.execute(() -> processMessages());
-        executorService.execute(() -> processMessages());
+        processes.putAll(
+                processRunnerService.prepareProcesses().stream()
+                        .map(ProcessUtils::start)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toMap(p -> number.getAndIncrement(), p -> p))
+        );
+        processes.forEach((number, process) -> executorService.execute(() -> ProcessUtils.printLogs(number, process)));
     }
 
     private void processMessages() {

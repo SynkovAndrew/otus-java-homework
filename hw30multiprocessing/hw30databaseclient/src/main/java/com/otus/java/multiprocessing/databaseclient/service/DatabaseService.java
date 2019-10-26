@@ -26,7 +26,7 @@ public class DatabaseService extends AbstractMessageService {
         userService.createUser((CreateUserRequestDTO) message.getContent());
         final FindUsersResponseDTO response = userService.findUsers();
         final var responseMessage = new Message<>(
-                response.getClass().getSimpleName(), response, getInstanceId());
+                response.getClass().getSimpleName(), response, message.getInstanceId());
         putInInputQueue(responseMessage);
     }
 }
