@@ -1,0 +1,13 @@
+socket.server:
+  frontend:
+    host: localhost
+    ports: 9000, 9001
+  database:
+    host: localhost
+    ports: 9010, 9011
+
+web.server.frontend.ports: 8080, 8081
+
+path.to.jar:
+  database: hw30multiprocessing/hw30databaseclient/target/hw30-database-client-1.0.jar
+  frontend: hw30multiprocessing/hw30frontendclient/target/hw30-frontend-client-1.0.jar

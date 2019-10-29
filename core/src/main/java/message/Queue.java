@@ -1,4 +1,4 @@
-package com.otus.java.ioc.messaging.message;
+package message;
 
 public enum Queue {
     INBOX_QUEUE("INBOX_QUEUE"),
