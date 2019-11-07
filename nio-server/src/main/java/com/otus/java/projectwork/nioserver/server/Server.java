@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Component
 public class Server {
-    private final static String END_OF_MESSAGE = "EOM";
+    private final static byte END_OF_MESSAGE = '\n';
     private final Selector selector;
     private final ServerSocketChannel serverSocketChannel;
     private final Map<SocketChannel, ByteBuffer> socketChannels;
@@ -48,26 +48,52 @@ public class Server {
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
         log.info("Server's been started at {}:{}", host, port);
+        run();
     }
 
     private void read(final SelectionKey key) throws IOException {
         final SocketChannel client = (SocketChannel) key.channel();
-        client.read(buffer);
-        if (new String(buffer.array()).trim().equals(END_OF_MESSAGE)) {
+        final ByteBuffer buffer = socketChannels.get(client);
+        final int readBytes = client.read(buffer);
+
+        // in case of result is equal to -1 the connection's closed from client side
+        if (readBytes == -1) {
+            log.info("{} connection's been closed", client.getRemoteAddress());
+            socketChannels.remove(client);
             client.close();
-            log.info("Message's been received");
         }
-        buffer.flip();
-        client.write(buffer);
-        buffer.clear();
+
+        if (readBytes > 0 && END_OF_MESSAGE == buffer.get(buffer.position() - 1)) {
+            client.register(selector, SelectionKey.OP_WRITE);
+            buffer.flip();
+            final String message = new String(buffer.array(), buffer.position(), buffer.limit());
+            log.info("Message {} from {} 's been received", message, client.getRemoteAddress());
+        }
     }
 
-    private void register() throws IOException {
+    private void accept() throws IOException {
         final var client = serverSocketChannel.accept();
         client.configureBlocking(false);
         client.register(selector, SelectionKey.OP_READ);
         socketChannels.put(client, ByteBuffer.allocate(1024));
         log.info("Client {}'s been connected to server", client.getRemoteAddress());
+    }
+
+    private void write(final SelectionKey key) throws IOException {
+        final SocketChannel client = (SocketChannel) key.channel();
+        final ByteBuffer buffer = socketChannels.get(client);
+
+        final String response = "Response from server";
+        buffer.clear();
+        buffer.put(ByteBuffer.wrap(response.getBytes()));
+        buffer.flip();
+
+        final int writtenBytes = client.write(buffer);
+        log.info("{} bytes've been written to {}", writtenBytes, client.getRemoteAddress());
+        if (!buffer.hasRemaining()) {
+            buffer.compact();
+            client.register(selector, SelectionKey.OP_READ);
+        }
     }
 
     public void run() throws IOException {
@@ -80,12 +106,17 @@ public class Server {
 
                 // a client's been connected to server
                 if (key.isAcceptable()) {
-                    register();
+                    accept();
                 }
 
                 if (key.isReadable()) {
                     read(key);
                 }
+
+                if (key.isWritable()) {
+                    write(key);
+                }
+
                 iter.remove();
             }
         }
