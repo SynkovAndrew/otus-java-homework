@@ -1,4 +1,4 @@
-package com.otus.java.projectwork.nioserver.dto;
+package dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class CreateUserRequestDTO {
     private Integer age;
     private String name;
-    private Long userId;
 }

@@ -28,7 +28,7 @@ import static java.util.Optional.ofNullable;
 @Component
 public class Server {
     private final static byte END_OF_MESSAGE = '\n';
-    private final Map<SocketChannel, Mono<UserDTO>> responses;
+    private final Map<SocketChannel, Subscription<UserDTO>> subscriptions;
     private final Selector selector;
     private final ServerSocketChannel serverSocketChannel;
     private final Map<SocketChannel, ByteBuffer> socketChannels;
@@ -42,7 +42,7 @@ public class Server {
         this.selector = Selector.open();
         this.serverSocketChannel = ServerSocketChannel.open();
         this.socketChannels = new ConcurrentHashMap<>();
-        this.responses = new ConcurrentHashMap<>();
+        this.subscriptions = new ConcurrentHashMap<>();
         this.userService = userService;
     }
 
@@ -84,8 +84,13 @@ public class Server {
         if (readBytes > 0 && END_OF_MESSAGE == buffer.get(buffer.position() - 1)) {
             client.register(selector, SelectionKey.OP_WRITE);
             buffer.flip();
-            final var message = new String(buffer.array(), buffer.position(), buffer.limit());
-            map(message).ifPresent(request -> responses.put(client, userService.create(request)));
+            final var message = new String(buffer.array(), buffer.position(), buffer.limit())
+                    .replaceAll("\n", "");
+            map(message).ifPresent(request -> {
+                final Mono<UserDTO> mono = userService.create(request);
+                final Subscription<UserDTO> subscription = map(mono);
+                subscriptions.put(client, subscription);
+            });
             log.info("Message {} from {} 's been received", message, client.getRemoteAddress());
         }
     }
@@ -118,25 +123,31 @@ public class Server {
 
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
-        ofNullable(responses.get(client)).ifPresent(
-                response -> response.subscribe(user -> map(user).ifPresent(
-                        json -> {
-                            final ByteBuffer buffer = socketChannels.get(client);
-                            buffer.clear();
-                            buffer.put(ByteBuffer.wrap(json.getBytes()));
-                            buffer.flip();
-                            try {
-                                final int writtenBytes = client.write(buffer);
-                                log.info("{} bytes've been written to {}", writtenBytes, client.getRemoteAddress());
-                                if (!buffer.hasRemaining()) {
-                                    buffer.compact();
-                                    client.register(selector, SelectionKey.OP_READ);
-                                }
-                            } catch (IOException e) {
-                                log.error("Failed to respond to client", e);
-                            }
-                        })
-                )
+        ofNullable(subscriptions.get(client)).ifPresent(
+                subscription -> {
+                    if (!subscription.isSubscribed()) {
+                        final Mono<UserDTO> publisher = subscription.getPublisher();
+                        publisher.subscribe(user -> map(user).ifPresent(
+                                json -> {
+                                    final ByteBuffer buffer = socketChannels.get(client);
+                                    buffer.clear();
+                                    buffer.put(ByteBuffer.wrap(json.getBytes()));
+                                    buffer.flip();
+                                    try {
+                                        final int writtenBytes = client.write(buffer);
+                                        log.info("{} bytes've been written to {}", writtenBytes, client.getRemoteAddress());
+                                        if (!buffer.hasRemaining()) {
+                                            buffer.compact();
+                                            client.register(selector, SelectionKey.OP_READ);
+                                        }
+                                    } catch (IOException e) {
+                                        log.error("Failed to respond to client", e);
+                                    }
+                                })
+                        );
+                        subscription.setSubscribed(true);
+                    }
+                }
         );
     }
 }

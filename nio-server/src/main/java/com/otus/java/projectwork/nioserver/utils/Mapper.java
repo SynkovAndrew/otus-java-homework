@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.otus.java.projectwork.nioserver.domain.User;
 import com.otus.java.projectwork.nioserver.dto.CreateUserRequestDTO;
 import com.otus.java.projectwork.nioserver.dto.UserDTO;
+import com.otus.java.projectwork.nioserver.server.Subscription;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
@@ -47,5 +49,9 @@ public class Mapper {
             log.info("Failed to write json", e);
             return empty();
         }
+    }
+
+    public static <T> Subscription<T> map(final Mono<T> source) {
+        return new Subscription<T>(source, false);
     }
 }
