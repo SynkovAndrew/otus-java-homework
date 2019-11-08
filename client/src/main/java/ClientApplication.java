@@ -14,21 +14,27 @@ public class ClientApplication {
     public static void main(String[] args) {
         final ExecutorService executorService = newFixedThreadPool(2);
         final ObjectMapper mapper = new ObjectMapper();
-        try (final Socket socket = new Socket("localhost", 4455)) {
+        try {
+            final Socket socket = new Socket("localhost", 4455);
             executorService.execute(() -> {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    String inputLine;
-                    while ((inputLine = reader.readLine()) != null) {
-                        stringBuilder.append(inputLine);
+                try {
+                    final BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println(line);
                     }
-                    System.out.println("Response from server: " + stringBuilder.toString());
                 } catch (IOException e) {
                     System.out.println(e.getMessage());
                 }
             });
             executorService.execute(() -> {
-                try (PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    System.out.println(e.getMessage());
+                }
+                try {
+                    final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
                     final CreateUserRequestDTO request = CreateUserRequestDTO.builder().age(11).name("Pavel").build();
                     final String json = mapper.writeValueAsString(request);
                     writer.write(json);
