@@ -39,4 +39,13 @@ public class Mapper {
             return empty();
         }
     }
+
+    public static Optional<String> map(final UserDTO source) {
+        try {
+            return ofNullable(objectMapper.writeValueAsString(source));
+        } catch (JsonProcessingException e) {
+            log.info("Failed to write json", e);
+            return empty();
+        }
+    }
 }
