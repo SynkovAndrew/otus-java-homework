@@ -1,11 +1,8 @@
 package com.otus.java.projectwork.nioserver.server;
 
-import com.otus.java.projectwork.nioserver.dto.UserDTO;
-import com.otus.java.projectwork.nioserver.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -22,35 +19,33 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.otus.java.projectwork.nioserver.utils.Mapper.map;
-import static java.util.Optional.ofNullable;
+import static java.nio.ByteBuffer.wrap;
 
 @Slf4j
 @Component
 public class Server {
     private final static byte END_OF_MESSAGE = '\n';
-    private final Map<SocketChannel, Subscription<UserDTO>> subscriptions;
+    private final ServerActionExecutor executor;
     private final Selector selector;
     private final ServerSocketChannel serverSocketChannel;
-    private final Map<SocketChannel, ByteBuffer> socketChannels;
-    private final UserService userService;
+    private final Map<Integer, ByteBuffer> socketChannels;
     @Value("${server.socket.host}")
     private String host;
     @Value("${server.socket.port}")
     private int port;
 
-    public Server(final UserService userService) throws IOException {
+    public Server(final ServerActionExecutor executor) throws IOException {
         this.selector = Selector.open();
         this.serverSocketChannel = ServerSocketChannel.open();
         this.socketChannels = new ConcurrentHashMap<>();
-        this.subscriptions = new ConcurrentHashMap<>();
-        this.userService = userService;
+        this.executor = executor;
     }
 
     private void accept() throws IOException {
         final var client = serverSocketChannel.accept();
         client.configureBlocking(false);
         client.register(selector, SelectionKey.OP_READ);
-        socketChannels.put(client, ByteBuffer.allocate(1024));
+        socketChannels.put(client.hashCode(), ByteBuffer.allocate(1024));
         log.info("Client {}'s been connected to server", client.getRemoteAddress());
     }
 
@@ -71,13 +66,13 @@ public class Server {
 
     private void read(final SelectionKey key) throws IOException {
         final SocketChannel client = (SocketChannel) key.channel();
-        final ByteBuffer buffer = socketChannels.get(client);
+        final ByteBuffer buffer = socketChannels.get(client.hashCode());
         final int readBytes = client.read(buffer);
 
         // in case of result is equal to -1 the connection's closed from client side
         if (readBytes == -1) {
             log.info("{} connection's been closed", client.getRemoteAddress());
-            socketChannels.remove(client);
+            socketChannels.remove(client.hashCode());
             client.close();
         }
 
@@ -86,16 +81,12 @@ public class Server {
             buffer.flip();
             final var message = new String(buffer.array(), buffer.position(), buffer.limit())
                     .replaceAll("\n", "");
-            map(message).ifPresent(request -> {
-                final Mono<UserDTO> mono = userService.create(request);
-                final Subscription<UserDTO> subscription = map(mono);
-                subscriptions.put(client, subscription);
-            });
+            map(message).ifPresent(request -> executor.acceptCreateUserRequest(client.hashCode(), request));
             log.info("Message {} from {} 's been received", message, client.getRemoteAddress());
         }
     }
 
-    public void run() throws IOException {
+    private void run() throws IOException {
         while (true) {
             selector.select(); // Blocking call. The current thread will be blocked till a client connect to server.
             final Set<SelectionKey> selectedKeys = selector.selectedKeys();
@@ -123,31 +114,22 @@ public class Server {
 
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
-        ofNullable(subscriptions.get(client)).ifPresent(
-                subscription -> {
-                    if (!subscription.isSubscribed()) {
-                        final Mono<UserDTO> publisher = subscription.getPublisher();
-                        publisher.subscribe(user -> map(user).ifPresent(
-                                json -> {
-                                    final ByteBuffer buffer = socketChannels.get(client);
-                                    buffer.clear();
-                                    buffer.put(ByteBuffer.wrap(json.getBytes()));
-                                    buffer.flip();
-                                    try {
-                                        final int writtenBytes = client.write(buffer);
-                                        log.info("{} bytes've been written to {}", writtenBytes, client.getRemoteAddress());
-                                        if (!buffer.hasRemaining()) {
-                                            buffer.compact();
-                                            client.register(selector, SelectionKey.OP_READ);
-                                        }
-                                    } catch (IOException e) {
-                                        log.error("Failed to respond to client", e);
-                                    }
-                                })
-                        );
-                        subscription.setSubscribed(true);
+        executor.getResponse(client.hashCode())
+                .ifPresent(user -> map(user).ifPresent(json -> {
+                    final ByteBuffer buffer = socketChannels.get(client.hashCode());
+                    buffer.clear();
+                    buffer.put(wrap(json.getBytes()));
+                    buffer.flip();
+                    try {
+                        final int writtenBytes = client.write(buffer);
+                        log.info("{} bytes've been written to {}", writtenBytes, client.getRemoteAddress());
+                        if (!buffer.hasRemaining()) {
+                            buffer.compact();
+                            client.register(selector, SelectionKey.OP_READ);
+                        }
+                    } catch (IOException e) {
+                        log.error("Failed to respond to client", e);
                     }
-                }
-        );
+                }));
     }
 }

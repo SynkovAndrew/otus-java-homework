@@ -16,7 +16,7 @@ public class UserServiceITTest {
     private UserService userService;
 
     @Test
-    public void givenAccount_whenSave_thenSave() {
+    public void createTest() {
         StepVerifier.create(
                 userService.create(CreateUserRequestDTO.builder()
                         .age(22)
