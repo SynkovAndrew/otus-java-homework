@@ -1,4 +1,4 @@
-package com.otus.java.projectwork.nioserver.domain;
+package domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

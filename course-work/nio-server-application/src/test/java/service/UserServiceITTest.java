@@ -1,7 +1,6 @@
-package com.otus.java.projectwork.nioserver.service;
+package service;
 
-import com.otus.java.projectwork.nioserver.NioServerApplication;
-import com.otus.java.projectwork.nioserver.dto.CreateUserRequestDTO;
+import dto.CreateUserRequestDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
