@@ -1,11 +1,12 @@
-package com.otus.java.projectwork.nioserver.service;
+package service;
 
-import com.otus.java.projectwork.nioserver.dto.CreateUserRequestDTO;
-import com.otus.java.projectwork.nioserver.dto.UserDTO;
-import com.otus.java.projectwork.nioserver.repository.UserReactiveRepository;
-import com.otus.java.projectwork.nioserver.utils.Mapper;
+
+import dto.CreateUserRequestDTO;
+import dto.UserDTO;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import repository.UserReactiveRepository;
+import utils.Mapper;
 
 import java.util.concurrent.atomic.AtomicLong;
 

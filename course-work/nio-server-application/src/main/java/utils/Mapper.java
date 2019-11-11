@@ -1,10 +1,10 @@
-package com.otus.java.projectwork.nioserver.utils;
+package utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.otus.java.projectwork.nioserver.domain.User;
-import com.otus.java.projectwork.nioserver.dto.CreateUserRequestDTO;
-import com.otus.java.projectwork.nioserver.dto.UserDTO;
+import domain.User;
+import dto.CreateUserRequestDTO;
+import dto.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;

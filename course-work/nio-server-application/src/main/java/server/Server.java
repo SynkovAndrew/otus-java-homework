@@ -1,4 +1,4 @@
-package com.otus.java.projectwork.nioserver.server;
+package server;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,8 +18,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.otus.java.projectwork.nioserver.utils.Mapper.map;
+
 import static java.nio.ByteBuffer.wrap;
+import static utils.Mapper.map;
 
 @Slf4j
 @Component

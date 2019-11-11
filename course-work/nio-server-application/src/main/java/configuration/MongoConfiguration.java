@@ -1,4 +1,4 @@
-package com.otus.java.projectwork.nioserver.configuration;
+package configuration;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
