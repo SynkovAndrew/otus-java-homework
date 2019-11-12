@@ -1,10 +1,10 @@
-package utils;
+package com.otus.java.coursework.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import domain.User;
-import dto.CreateUserRequestDTO;
-import dto.UserDTO;
+import com.otus.java.coursework.domain.User;
+import com.otus.java.coursework.dto.CreateUserRequestDTO;
+import com.otus.java.coursework.dto.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;

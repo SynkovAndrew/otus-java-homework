@@ -1,0 +1,3 @@
+server.socket:
+    host: localhost
+    port: 4455

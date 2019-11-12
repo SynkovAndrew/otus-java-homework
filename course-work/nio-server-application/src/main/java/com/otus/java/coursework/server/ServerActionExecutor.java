@@ -1,11 +1,11 @@
-package server;
+package com.otus.java.coursework.server;
 
-import dto.CreateUserRequestDTO;
-import dto.UserDTO;
+import com.otus.java.coursework.dto.CreateUserRequestDTO;
+import com.otus.java.coursework.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import service.UserService;
+import com.otus.java.coursework.service.UserService;
 
 import java.util.Map;
 import java.util.Optional;

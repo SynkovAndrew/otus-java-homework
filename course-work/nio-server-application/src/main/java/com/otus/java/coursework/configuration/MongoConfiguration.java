@@ -1,4 +1,4 @@
-package configuration;
+package com.otus.java.coursework.configuration;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;

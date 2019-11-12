@@ -1,12 +1,12 @@
-package service;
+package com.otus.java.coursework.service;
 
 
-import dto.CreateUserRequestDTO;
-import dto.UserDTO;
+import com.otus.java.coursework.dto.CreateUserRequestDTO;
+import com.otus.java.coursework.dto.UserDTO;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import repository.UserReactiveRepository;
-import utils.Mapper;
+import com.otus.java.coursework.repository.UserReactiveRepository;
+import com.otus.java.coursework.utils.Mapper;
 
 import java.util.concurrent.atomic.AtomicLong;
 

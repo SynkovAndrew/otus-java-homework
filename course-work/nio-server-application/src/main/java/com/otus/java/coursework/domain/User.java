@@ -1,4 +1,4 @@
-package domain;
+package com.otus.java.coursework.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

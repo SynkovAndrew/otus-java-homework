@@ -12,7 +12,7 @@
     <modules>
         <module>core-components</module>
         <module>client-lib</module>
-        <module>nio-server-application</module>
+        <module>nio-com.otus.java.coursework.server-application</module>
     </modules>
 
     <properties>

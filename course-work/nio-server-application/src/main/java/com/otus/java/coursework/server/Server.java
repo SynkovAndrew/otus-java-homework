@@ -1,4 +1,4 @@
-package server;
+package com.otus.java.coursework.server;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 import static java.nio.ByteBuffer.wrap;
-import static utils.Mapper.map;
+import static com.otus.java.coursework.utils.Mapper.map;
 
 @Slf4j
 @Component
@@ -47,7 +47,7 @@ public class Server {
         client.configureBlocking(false);
         client.register(selector, SelectionKey.OP_READ);
         socketChannels.put(client.hashCode(), ByteBuffer.allocate(1024));
-        log.info("Client {}'s been connected to server", client.getRemoteAddress());
+        log.info("Client {}'s been connected to com.otus.java.coursework.server", client.getRemoteAddress());
     }
 
     @PreDestroy
@@ -89,13 +89,13 @@ public class Server {
 
     private void run() throws IOException {
         while (true) {
-            selector.select(); // Blocking call. The current thread will be blocked till a client connect to server.
+            selector.select(); // Blocking call. The current thread will be blocked till a client connect to com.otus.java.coursework.server.
             final Set<SelectionKey> selectedKeys = selector.selectedKeys();
             final Iterator<SelectionKey> iter = selectedKeys.iterator();
             while (iter.hasNext()) {
                 SelectionKey key = iter.next();
 
-                // a client's been connected to server
+                // a client's been connected to com.otus.java.coursework.server
                 if (key.isAcceptable()) {
                     accept();
                 }

@@ -1,4 +1,4 @@
-package dto;
+package com.otus.java.coursework.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
