@@ -1,3 +1,7 @@
 server.socket:
     host: localhost
     port: 4455
+
+# possible implementations: console, file, database
+server.action.executor.implementation: console
+server.action.executor.thread.pool.size: 10

@@ -107,7 +107,7 @@ public class Server {
 
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
-        executor.getResponse(client.hashCode())
+        executor.getJsonResponse(client.hashCode())
                 .ifPresent(json -> {
                     final ByteBuffer buffer = socketChannels.get(client.hashCode());
                     buffer.clear();
