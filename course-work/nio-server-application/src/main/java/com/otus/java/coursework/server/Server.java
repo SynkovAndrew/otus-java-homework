@@ -1,5 +1,6 @@
 package com.otus.java.coursework.server;
 
+import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -18,9 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 import static java.nio.ByteBuffer.wrap;
-import static com.otus.java.coursework.utils.Mapper.map;
 
 @Slf4j
 @Component
@@ -42,18 +41,16 @@ public class Server {
         this.executor = executor;
     }
 
-    private void accept() throws IOException {
-        final var client = serverSocketChannel.accept();
-        client.configureBlocking(false);
-        client.register(selector, SelectionKey.OP_READ);
-        socketChannels.put(client.hashCode(), ByteBuffer.allocate(1024));
-        log.info("Client {}'s been connected to com.otus.java.coursework.server", client.getRemoteAddress());
+    private void accept() {
+        SocketChannelUtils.accept(selector, serverSocketChannel).ifPresent(client -> {
+            socketChannels.put(client.hashCode(), ByteBuffer.allocate(1024));
+            log.info("Client {}'s been connected to server", SocketChannelUtils.getRemoteAddress(client).get());
+        });
     }
 
     @PreDestroy
-    public void destroy() throws IOException {
-        selector.close();
-        serverSocketChannel.close();
+    public void destroy() {
+        SocketChannelUtils.destroy(selector, serverSocketChannel);
     }
 
     @PostConstruct
@@ -65,49 +62,44 @@ public class Server {
         run();
     }
 
-    private void read(final SelectionKey key) throws IOException {
+    private void read(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
         final ByteBuffer buffer = socketChannels.get(client.hashCode());
-        final int readBytes = client.read(buffer);
+        final int readBytes = SocketChannelUtils.read(client, buffer);
 
         // in case of result is equal to -1 the connection's closed from client side
         if (readBytes == -1) {
-            log.info("{} connection's been closed", client.getRemoteAddress());
+            log.info("{} connection's been closed", SocketChannelUtils.getRemoteAddress(client).get());
             socketChannels.remove(client.hashCode());
-            client.close();
+            SocketChannelUtils.close(client);
         }
 
         if (readBytes > 0 && END_OF_MESSAGE == buffer.get(buffer.position() - 1)) {
-            client.register(selector, SelectionKey.OP_WRITE);
+            SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
             buffer.flip();
             final var message = new String(buffer.array(), buffer.position(), buffer.limit())
                     .replaceAll("\n", "");
-            map(message).ifPresent(request -> executor.acceptCreateUserRequest(client.hashCode(), request));
-            log.info("Message {} from {} 's been received", message, client.getRemoteAddress());
+            executor.acceptJsonMessage(client.hashCode(), message);
+            log.info("Message {} from {} 's been received", message, SocketChannelUtils.getRemoteAddress(client).get());
         }
     }
 
     private void run() throws IOException {
         while (true) {
-            selector.select(); // Blocking call. The current thread will be blocked till a client connect to com.otus.java.coursework.server.
+            selector.select(); // Blocking call. The current thread will be blocked till a client connect to server.
             final Set<SelectionKey> selectedKeys = selector.selectedKeys();
             final Iterator<SelectionKey> iter = selectedKeys.iterator();
             while (iter.hasNext()) {
                 SelectionKey key = iter.next();
-
-                // a client's been connected to com.otus.java.coursework.server
                 if (key.isAcceptable()) {
                     accept();
                 }
-
                 if (key.isReadable()) {
                     read(key);
                 }
-
                 if (key.isWritable()) {
                     write(key);
                 }
-
                 iter.remove();
             }
         }
@@ -116,21 +108,18 @@ public class Server {
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
         executor.getResponse(client.hashCode())
-                .ifPresent(user -> map(user).ifPresent(json -> {
+                .ifPresent(json -> {
                     final ByteBuffer buffer = socketChannels.get(client.hashCode());
                     buffer.clear();
                     buffer.put(wrap(json.getBytes()));
                     buffer.flip();
-                    try {
-                        final int writtenBytes = client.write(buffer);
-                        log.info("{} bytes've been written to {}", writtenBytes, client.getRemoteAddress());
-                        if (!buffer.hasRemaining()) {
-                            buffer.compact();
-                            client.register(selector, SelectionKey.OP_READ);
-                        }
-                    } catch (IOException e) {
-                        log.error("Failed to respond to client", e);
+                    final int writtenBytes = SocketChannelUtils.write(client, buffer);
+                    log.info("{} bytes've been written to {}",
+                            writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
+                    if (!buffer.hasRemaining()) {
+                        buffer.compact();
+                        SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
                     }
-                }));
+                });
     }
 }

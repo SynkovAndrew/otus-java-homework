@@ -1,32 +1,35 @@
 package com.otus.java.coursework;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.otus.java.coursework.dto.CreateUserRequestDTO;
+import com.otus.java.coursework.serialization.Message;
+import com.otus.java.coursework.serialization.Serializer;
+import com.otus.java.coursework.utils.SocketChannelUtils;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
 public class ClientApplication {
     public static void main(String[] args) {
-        final ExecutorService executorService = newFixedThreadPool(2);
-        final ObjectMapper mapper = new ObjectMapper();
-        try {
-            final Socket socket = new Socket("localhost", 4455);
-            try (final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
-                System.out.println("Sending message to com.otus.java.coursework.server...");
-                final CreateUserRequestDTO request = CreateUserRequestDTO.builder().age(11).name("Pavel").build();
-                final String json = mapper.writeValueAsString(request);
-                writer.write(json);
-                writer.write('\n');
-            } catch (IOException e) {
-                System.out.println(e.getMessage());
-            }
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
+        final var serializer = new Serializer();
+        SocketChannelUtils.openSocketChannel("localhost", 4455).ifPresent(socketChannel -> {
+            System.out.println("Sending message to server...");
+
+            final CreateUserRequestDTO request = CreateUserRequestDTO.builder().age(11).name("Pavel").build();
+            final var message = new Message<>(request);
+
+            serializer.map(message).ifPresent(json -> {
+                final var buffer = ByteBuffer.wrap((json + '\n').getBytes());
+                SocketChannelUtils.write(socketChannel, buffer);
+                buffer.clear();
+                SocketChannelUtils.read(socketChannel, buffer);
+                String response = new String(buffer.array()).trim();
+                System.out.println("response=" + response);
+                buffer.clear();
+            });
+
+            SocketChannelUtils.close(socketChannel);
+        });
     }
 }
