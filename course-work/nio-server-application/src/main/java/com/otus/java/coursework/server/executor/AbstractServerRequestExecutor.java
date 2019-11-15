@@ -28,7 +28,11 @@ public abstract class AbstractServerRequestExecutor {
                 .thenApply((response) -> responses.put(clientId, response));
     }
 
-    Optional<BaseDTO> getResponse(final int clientId) {
+    public Optional<BaseDTO> getResponse(final int clientId) {
         return ofNullable(responses.get(clientId));
+    }
+
+    BaseDTO putResponse(final int clientId, final BaseDTO response) {
+        return responses.put(clientId, response);
     }
 }

@@ -27,9 +27,4 @@ public class ConsoleServerRequestExecutor extends AbstractServerRequestExecutor 
             return dto;
         });
     }
-
-    @Override
-    public Optional<BaseDTO> getResponse(final int clientId) {
-        return getResponse(clientId);
-    }
 }

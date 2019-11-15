@@ -26,19 +26,11 @@ public class DatabaseServerRequestExecutor extends AbstractServerRequestExecutor
 
     @Override
     public void acceptRequest(final int clientId, final BaseDTO dto) {
-        executeRequest(clientId, () -> {
-            if (dto instanceof CreateUserRequestDTO) {
-                log.info("Processing request {} from client {}", dto, clientId);
-                return dbService.create((CreateUserRequestDTO) dto).block();
-            } else {
-                log.info("Request {} from client {} has wrong type", dto, clientId);
-                return dto;
-            }
-        });
-    }
-
-    @Override
-    public Optional<BaseDTO> getResponse(final int clientId) {
-        return getResponse(clientId);
+        if (dto instanceof CreateUserRequestDTO) {
+            log.info("Processing request {} from client {}", dto, clientId);
+            dbService.create((CreateUserRequestDTO) dto)
+                    .toFuture()
+                    .thenApply(response -> putResponse(clientId, response));
+        }
     }
 }

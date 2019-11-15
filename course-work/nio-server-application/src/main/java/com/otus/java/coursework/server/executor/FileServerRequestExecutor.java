@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "server.action.executor.implementation", havingValue = "file")
@@ -33,10 +31,5 @@ public class FileServerRequestExecutor extends AbstractServerRequestExecutor imp
             fileService.writeToFile(fileName, dto);
             return dto;
         });
-    }
-
-    @Override
-    public Optional<BaseDTO> getResponse(final int clientId) {
-        return getResponse(clientId);
     }
 }
