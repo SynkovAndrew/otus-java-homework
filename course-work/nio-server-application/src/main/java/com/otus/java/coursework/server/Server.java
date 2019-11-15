@@ -1,5 +1,6 @@
 package com.otus.java.coursework.server;
 
+import com.otus.java.coursework.serialization.Serializer;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,14 +20,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.otus.java.coursework.utils.Mapper.map;
 import static java.nio.ByteBuffer.wrap;
 
 @Slf4j
 @Component
 public class Server {
     private final static byte END_OF_MESSAGE = '\n';
-    private final ServerActionExecutor executor;
+    private final ServerRequestExecutor executor;
     private final Selector selector;
+    private final Serializer serializer;
     private final ServerSocketChannel serverSocketChannel;
     private final Map<Integer, ByteBuffer> socketChannels;
     @Value("${server.socket.host}")
@@ -34,11 +37,12 @@ public class Server {
     @Value("${server.socket.port}")
     private int port;
 
-    public Server(final ServerActionExecutor executor) throws IOException {
+    public Server(final ServerRequestExecutor executor, final Serializer serializer) throws IOException {
         this.selector = Selector.open();
         this.serverSocketChannel = ServerSocketChannel.open();
         this.socketChannels = new ConcurrentHashMap<>();
         this.executor = executor;
+        this.serializer = serializer;
     }
 
     private void accept() {
@@ -77,10 +81,12 @@ public class Server {
         if (readBytes > 0 && END_OF_MESSAGE == buffer.get(buffer.position() - 1)) {
             SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
             buffer.flip();
-            final var message = new String(buffer.array(), buffer.position(), buffer.limit())
+            final var json = new String(buffer.array(), buffer.position(), buffer.limit())
                     .replaceAll("\n", "");
-            executor.acceptJsonMessage(client.hashCode(), message);
-            log.info("Message {} from {} 's been received", message, SocketChannelUtils.getRemoteAddress(client).get());
+            serializer.map(json).ifPresent(message -> {
+                executor.acceptRequest(client.hashCode(), message.getContent());
+                log.info("Message {} from {} 's been received", message, SocketChannelUtils.getRemoteAddress(client).get());
+            });
         }
     }
 
@@ -107,19 +113,20 @@ public class Server {
 
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
-        executor.getJsonResponse(client.hashCode())
-                .ifPresent(json -> {
-                    final ByteBuffer buffer = socketChannels.get(client.hashCode());
-                    buffer.clear();
-                    buffer.put(wrap(json.getBytes()));
-                    buffer.flip();
-                    final int writtenBytes = SocketChannelUtils.write(client, buffer);
-                    log.info("{} bytes've been written to {}",
-                            writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
-                    if (!buffer.hasRemaining()) {
-                        buffer.compact();
-                        SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
-                    }
-                });
+        executor.getResponse(client.hashCode())
+                .ifPresent(dto ->
+                        map(dto).ifPresent(json -> {
+                            final ByteBuffer buffer = socketChannels.get(client.hashCode());
+                            buffer.clear();
+                            buffer.put(wrap(json.getBytes()));
+                            buffer.flip();
+                            final int writtenBytes = SocketChannelUtils.write(client, buffer);
+                            log.info("{} bytes've been written to {}",
+                                    writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
+                            if (!buffer.hasRemaining()) {
+                                buffer.compact();
+                                SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
+                            }
+                        }));
     }
 }

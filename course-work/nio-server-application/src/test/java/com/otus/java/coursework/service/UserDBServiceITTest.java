@@ -11,14 +11,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 @SpringBootTest(classes = NioServerApplication.class)
-public class UserServiceITTest {
+public class UserDBServiceITTest {
     @Autowired
-    private UserService userService;
+    private UserDBService userDBService;
 
     @Test
     public void createTest() {
         StepVerifier.create(
-                userService.create(CreateUserRequestDTO.builder()
+                userDBService.create(CreateUserRequestDTO.builder()
                         .age(22)
                         .name("Alexey")
                         .build()))

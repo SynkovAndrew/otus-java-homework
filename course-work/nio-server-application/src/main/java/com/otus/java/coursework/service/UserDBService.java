@@ -11,11 +11,11 @@ import com.otus.java.coursework.utils.Mapper;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
-public class UserService {
+public class UserDBService {
     private final AtomicLong id;
     private final UserReactiveRepository repository;
 
-    public UserService(final UserReactiveRepository repository) {
+    public UserDBService(final UserReactiveRepository repository) {
         this.repository = repository;
         this.id = new AtomicLong(10000);
     }

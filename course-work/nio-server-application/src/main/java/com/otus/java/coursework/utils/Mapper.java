@@ -1,10 +1,14 @@
 package com.otus.java.coursework.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.otus.java.coursework.domain.User;
+import com.otus.java.coursework.dto.BaseDTO;
 import com.otus.java.coursework.dto.CreateUserRequestDTO;
 import com.otus.java.coursework.dto.UserDTO;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 public class Mapper {
@@ -23,5 +27,14 @@ public class Mapper {
                 .name(source.getName())
                 .userId(source.getUserId())
                 .build();
+    }
+
+    public static Optional<String> map(final BaseDTO dto) {
+        try {
+            return Optional.ofNullable(objectMapper.writeValueAsString(dto));
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse dto", e);
+            return Optional.empty();
+        }
     }
 }

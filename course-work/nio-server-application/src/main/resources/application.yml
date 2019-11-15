@@ -3,5 +3,8 @@ server.socket:
     port: 4455
 
 # possible implementations: console, file, database
-server.action.executor.implementation: console
+server.action.executor.implementation: file
 server.action.executor.thread.pool.size: 10
+file.server.action.executor.file.name: output.txt
+file.server.action.executor.folder.name: ./course-work/nio-server-application/src/main/resources/
+
