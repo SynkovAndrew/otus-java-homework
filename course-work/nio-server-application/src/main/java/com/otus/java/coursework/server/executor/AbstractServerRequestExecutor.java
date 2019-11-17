@@ -31,8 +31,4 @@ public abstract class AbstractServerRequestExecutor {
     public Optional<BaseDTO> getResponse(final int clientId) {
         return ofNullable(responses.get(clientId));
     }
-
-    BaseDTO putResponse(final int clientId, final BaseDTO response) {
-        return responses.put(clientId, response);
-    }
 }

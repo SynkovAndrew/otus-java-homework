@@ -5,7 +5,6 @@ import com.otus.java.coursework.dto.CreateUserRequestDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -17,18 +16,15 @@ public class UserDBServiceITTest {
 
     @Test
     public void createTest() {
-        StepVerifier.create(
-                userDBService.create(CreateUserRequestDTO.builder()
-                        .age(22)
-                        .name("Alexey")
-                        .build()))
-                .assertNext(obj -> assertAll(
-                        () -> assertThat(obj).isNotNull(),
-                        () -> assertThat(obj.getAge()).isEqualTo(22),
-                        () -> assertThat(obj.getName()).isEqualTo("Alexey"),
-                        () -> assertThat(obj.getUserId()).isNotNull()
-                ))
-                .expectComplete()
-                .verify();
+        final var obj = userDBService.create(CreateUserRequestDTO.builder()
+                .age(22)
+                .name("Alexey")
+                .build());
+        assertAll(
+                () -> assertThat(obj).isNotNull(),
+                () -> assertThat(obj.getAge()).isEqualTo(22),
+                () -> assertThat(obj.getName()).isEqualTo("Alexey"),
+                () -> assertThat(obj.getUserId()).isNotNull()
+        );
     }
 }

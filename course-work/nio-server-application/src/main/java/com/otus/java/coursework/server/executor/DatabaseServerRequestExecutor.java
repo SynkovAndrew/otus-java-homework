@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "server.action.executor.implementation", havingValue = "database")
@@ -27,10 +25,10 @@ public class DatabaseServerRequestExecutor extends AbstractServerRequestExecutor
     @Override
     public void acceptRequest(final int clientId, final BaseDTO dto) {
         if (dto instanceof CreateUserRequestDTO) {
-            log.info("Processing request {} from client {}", dto, clientId);
-            dbService.create((CreateUserRequestDTO) dto)
-                    .toFuture()
-                    .thenApply(response -> putResponse(clientId, response));
+            executeRequest(clientId, () -> {
+                log.info("Processing request {} from client {}...", dto, clientId);
+                return dbService.create((CreateUserRequestDTO) dto);
+            });
         }
     }
 }
