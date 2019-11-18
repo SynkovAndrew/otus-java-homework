@@ -1,4 +1,4 @@
-package com.otus.java.coursework.server;
+package com.otus.java.coursework.server.executor;
 
 import com.otus.java.coursework.dto.BaseDTO;
 

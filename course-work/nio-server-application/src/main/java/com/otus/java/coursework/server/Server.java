@@ -1,6 +1,7 @@
 package com.otus.java.coursework.server;
 
 import com.otus.java.coursework.serialization.Serializer;
+import com.otus.java.coursework.server.executor.ServerRequestExecutor;
 import com.otus.java.coursework.utils.Mapper;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,8 @@ public class Server {
     @Value("${server.socket.port}")
     private int port;
 
-    public Server(final ServerRequestExecutor executor, final Serializer serializer) throws IOException {
+    public Server(final ServerRequestExecutor executor,
+                  final Serializer serializer) throws IOException {
         this.selector = Selector.open();
         this.serverSocketChannel = ServerSocketChannel.open();
         this.socketChannels = new ConcurrentHashMap<>();

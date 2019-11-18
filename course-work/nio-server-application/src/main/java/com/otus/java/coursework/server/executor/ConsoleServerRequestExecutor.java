@@ -1,13 +1,10 @@
 package com.otus.java.coursework.server.executor;
 
 import com.otus.java.coursework.dto.BaseDTO;
-import com.otus.java.coursework.server.ServerRequestExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 import static com.otus.java.coursework.utils.Mapper.map;
 

@@ -1,7 +1,6 @@
 package com.otus.java.coursework.server.executor;
 
 import com.otus.java.coursework.dto.BaseDTO;
-import com.otus.java.coursework.server.ServerRequestExecutor;
 import com.otus.java.coursework.service.FileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
