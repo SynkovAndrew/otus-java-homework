@@ -1,6 +1,7 @@
 package com.otus.java.coursework.server;
 
 import com.otus.java.coursework.serialization.Serializer;
+import com.otus.java.coursework.utils.Mapper;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,9 +20,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
-import static com.otus.java.coursework.utils.Mapper.map;
 import static java.nio.ByteBuffer.wrap;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 @Slf4j
 @Component
@@ -30,6 +32,7 @@ public class Server {
     private final ServerRequestExecutor executor;
     private final Selector selector;
     private final Serializer serializer;
+    private final ExecutorService serverRunner;
     private final ServerSocketChannel serverSocketChannel;
     private final Map<Integer, ByteBuffer> socketChannels;
     @Value("${server.socket.host}")
@@ -43,6 +46,7 @@ public class Server {
         this.socketChannels = new ConcurrentHashMap<>();
         this.executor = executor;
         this.serializer = serializer;
+        this.serverRunner = newSingleThreadExecutor();
     }
 
     private void accept() {
@@ -62,8 +66,8 @@ public class Server {
         serverSocketChannel.bind(new InetSocketAddress(host, port));
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        serverRunner.execute(this::run);
         log.info("Server's been started at {}:{}", host, port);
-        run();
     }
 
     private void read(final SelectionKey key) {
@@ -90,9 +94,9 @@ public class Server {
         }
     }
 
-    private void run() throws IOException {
+    private void run() {
         while (true) {
-            selector.select(); // Blocking call. The current thread will be blocked till a client connect to server.
+            SocketChannelUtils.select(selector); // Blocking call. The current thread will be blocked till a client connect to server.
             final Set<SelectionKey> selectedKeys = selector.selectedKeys();
             final Iterator<SelectionKey> iter = selectedKeys.iterator();
             while (iter.hasNext()) {
@@ -113,20 +117,18 @@ public class Server {
 
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
-        executor.getResponse(client.hashCode())
-                .ifPresent(dto ->
-                        map(dto).ifPresent(json -> {
-                            final ByteBuffer buffer = socketChannels.get(client.hashCode());
-                            buffer.clear();
-                            buffer.put(wrap(json.getBytes()));
-                            buffer.flip();
-                            final int writtenBytes = SocketChannelUtils.write(client, buffer);
-                            log.info("{} bytes've been written to {}",
-                                    writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
-                            if (!buffer.hasRemaining()) {
-                                buffer.compact();
-                                SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
-                            }
-                        }));
+        executor.getResponse(client.hashCode()).flatMap(Mapper::map).ifPresent(json -> {
+            final ByteBuffer buffer = socketChannels.get(client.hashCode());
+            buffer.clear();
+            buffer.put(wrap(json.getBytes()));
+            buffer.flip();
+            final int writtenBytes = SocketChannelUtils.write(client, buffer);
+            log.info("{} bytes've been written to {}",
+                    writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
+            if (!buffer.hasRemaining()) {
+                buffer.compact();
+                SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
+            }
+        });
     }
 }

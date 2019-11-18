@@ -82,6 +82,14 @@ public class SocketChannelUtils {
         }
     }
 
+    public static void select(final Selector selector) {
+        try {
+            selector.select();
+        } catch (IOException e) {
+            log.info("Failed to select", e);
+        }
+    }
+
     public static int write(final SocketChannel socketChannel, final ByteBuffer buffer) {
         try {
             return socketChannel.write(buffer);

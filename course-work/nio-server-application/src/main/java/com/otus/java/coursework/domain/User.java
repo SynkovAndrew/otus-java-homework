@@ -4,24 +4,24 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import javax.persistence.*;
 
 @Data
 @Builder
-@Document
+@Entity
+@Table(name = "USER")
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    @NotNull
+    @Column(name = "AGE", nullable = false)
     private Integer age;
     @Id
-    private String id;
-    @NotEmpty
+    @GeneratedValue
+    @Column(name = "ID", nullable = false)
+    private Long id;
+    @Column(name = "NAME", nullable = false)
     private String name;
-    @NotNull
+    @Column(name = "USER_ID", nullable = false)
     private Long userId;
 }
