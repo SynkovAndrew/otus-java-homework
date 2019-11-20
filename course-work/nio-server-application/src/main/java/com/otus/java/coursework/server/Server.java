@@ -31,20 +31,18 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 public class Server {
     private final static byte END_OF_MESSAGE = '\n';
     private final ServerRequestExecutor executor;
-    private final Selector selector;
     private final Serializer serializer;
     private final ExecutorService serverRunner;
-    private final ServerSocketChannel serverSocketChannel;
     private final Map<Integer, ByteBuffer> socketChannels;
     @Value("${server.socket.host}")
     private String host;
     @Value("${server.socket.port}")
     private int port;
+    private Selector selector;
+    private ServerSocketChannel serverSocketChannel;
 
     public Server(final ServerRequestExecutor executor,
-                  final Serializer serializer) throws IOException {
-        this.selector = Selector.open();
-        this.serverSocketChannel = ServerSocketChannel.open();
+                  final Serializer serializer) {
         this.socketChannels = new ConcurrentHashMap<>();
         this.executor = executor;
         this.serializer = serializer;
@@ -65,6 +63,8 @@ public class Server {
 
     @PostConstruct
     public void init() throws IOException {
+        selector = Selector.open();
+        serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.bind(new InetSocketAddress(host, port));
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
