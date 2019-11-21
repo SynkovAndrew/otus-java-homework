@@ -30,6 +30,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 @Component
 public class Server {
     private final static byte END_OF_MESSAGE = '\n';
+
     private final ServerRequestExecutor executor;
     private final Serializer serializer;
     private final ExecutorService serverRunner;
