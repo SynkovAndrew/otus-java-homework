@@ -2,6 +2,7 @@ package com.otus.java.coursework.server.executor;
 
 import com.otus.java.coursework.dto.BaseDTO;
 import com.otus.java.coursework.dto.CreateUserRequestDTO;
+import com.otus.java.coursework.server.exchange.ExchangeComponent;
 import com.otus.java.coursework.service.UserDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,12 +14,15 @@ import org.springframework.stereotype.Service;
 @ConditionalOnProperty(name = "server.action.executor.implementation", havingValue = "database")
 public class DatabaseServerRequestExecutor extends AbstractServerRequestExecutor implements ServerRequestExecutor {
     private final UserDBService dbService;
+    private final ExchangeComponent exchangeComponent;
 
     public DatabaseServerRequestExecutor(
             final UserDBService dbService,
+            final ExchangeComponent exchangeComponent,
             final @Value("${server.action.executor.thread.pool.size:10}") int threadPoolSize) {
         super(threadPoolSize);
         this.dbService = dbService;
+        this.exchangeComponent = exchangeComponent;
     }
 
     @Override

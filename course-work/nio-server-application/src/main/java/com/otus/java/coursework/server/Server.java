@@ -2,6 +2,7 @@ package com.otus.java.coursework.server;
 
 import com.otus.java.coursework.serialization.Serializer;
 import com.otus.java.coursework.server.executor.ServerRequestExecutor;
+import com.otus.java.coursework.server.socket.SocketServerComponent;
 import com.otus.java.coursework.utils.Mapper;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 @Component
 public class Server {
     private final static byte END_OF_MESSAGE = '\n';
+    private final SocketServerComponent socketServerComponent;
     private final ServerRequestExecutor executor;
     private final Serializer serializer;
     private final ExecutorService serverRunner;
@@ -41,34 +43,18 @@ public class Server {
     private Selector selector;
     private ServerSocketChannel serverSocketChannel;
 
-    public Server(final ServerRequestExecutor executor,
+    public Server(final SocketServerComponent socketServerComponent,
+                  final ServerRequestExecutor executor,
                   final Serializer serializer) {
-        this.socketChannels = new ConcurrentHashMap<>();
+        this.socketServerComponent = socketServerComponent;
         this.executor = executor;
         this.serializer = serializer;
+        this.socketChannels = new ConcurrentHashMap<>();
         this.serverRunner = newSingleThreadExecutor();
     }
 
-    private void accept() {
-        SocketChannelUtils.accept(selector, serverSocketChannel).ifPresent(client -> {
-            socketChannels.put(client.hashCode(), ByteBuffer.allocate(1024));
-            log.info("Client {}'s been connected to server", SocketChannelUtils.getRemoteAddress(client).get());
-        });
-    }
-
-    @PreDestroy
-    public void destroy() {
-        SocketChannelUtils.destroy(selector, serverSocketChannel);
-    }
-
     @PostConstruct
-    public void init() throws IOException {
-        selector = Selector.open();
-        serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.bind(new InetSocketAddress(host, port));
-        serverSocketChannel.configureBlocking(false);
-        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-        serverRunner.execute(this::run);
+    public void init() {
         log.info("Server's been started at {}:{}", host, port);
     }
 
@@ -96,26 +82,6 @@ public class Server {
         }
     }
 
-    private void run() {
-        while (true) {
-            SocketChannelUtils.select(selector); // Blocking call. The current thread will be blocked till a client connect to server.
-            final Set<SelectionKey> selectedKeys = selector.selectedKeys();
-            final Iterator<SelectionKey> iter = selectedKeys.iterator();
-            while (iter.hasNext()) {
-                SelectionKey key = iter.next();
-                if (key.isAcceptable()) {
-                    accept();
-                }
-                if (key.isReadable()) {
-                    read(key);
-                }
-                if (key.isWritable()) {
-                    write(key);
-                }
-                iter.remove();
-            }
-        }
-    }
 
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
