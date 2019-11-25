@@ -24,13 +24,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
 import static java.nio.ByteBuffer.wrap;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 @Slf4j
 @Component
 public class Server {
     private final static byte END_OF_MESSAGE = '\n';
-
     private final ServerRequestExecutor executor;
     private final Serializer serializer;
     private final ExecutorService serverRunner;
@@ -43,11 +41,12 @@ public class Server {
     private ServerSocketChannel serverSocketChannel;
 
     public Server(final ServerRequestExecutor executor,
-                  final Serializer serializer) {
+                  final Serializer serializer,
+                  final ExecutorService serverRunner) {
         this.socketChannels = new ConcurrentHashMap<>();
         this.executor = executor;
         this.serializer = serializer;
-        this.serverRunner = newSingleThreadExecutor();
+        this.serverRunner = serverRunner;
     }
 
     private void accept() {
