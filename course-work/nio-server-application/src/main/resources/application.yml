@@ -1,6 +1,10 @@
 server.socket:
-    host: localhost
-    port: 4455
+  host: localhost
+  port: 4455
+
+database:
+  uri: mongodb://localhost:27017
+  name: nio-server-database
 
 # possible implementations: console, file, database
 server.action.executor.implementation: database
