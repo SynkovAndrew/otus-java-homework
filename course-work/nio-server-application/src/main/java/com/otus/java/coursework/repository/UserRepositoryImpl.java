@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @ConditionalOnProperty(name = "server.action.executor.implementation", havingValue = "database")
-public class UserRepositoryImpl extends AbstractMongoRepository<User> implements MongoRepository<User> {
+public class UserRepositoryImpl extends AbstractMongoRepository<User> {
     public UserRepositoryImpl(final MongoClient mongoClient) {
         super(mongoClient, User.class.getSimpleName().toLowerCase());
     }
@@ -21,5 +21,14 @@ public class UserRepositoryImpl extends AbstractMongoRepository<User> implements
         document.append("name", entity.getName());
         document.append("userId", entity.getUserId());
         return document;
+    }
+
+    @Override
+    protected User map(Document document) {
+        return User.builder()
+                .age(document.getInteger("age"))
+                .userId(document.getLong("userId"))
+                .name(document.getString("name"))
+                .build();
     }
 }

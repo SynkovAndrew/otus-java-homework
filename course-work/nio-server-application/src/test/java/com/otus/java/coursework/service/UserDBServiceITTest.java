@@ -16,15 +16,16 @@ public class UserDBServiceITTest {
 
     @Test
     public void createTest() {
-        final var obj = userDBService.create(CreateUserRequestDTO.builder()
+        userDBService.create(CreateUserRequestDTO.builder()
                 .age(22)
                 .name("Alexey")
                 .build());
+        final var users = userDBService.findAll();
         assertAll(
-                () -> assertThat(obj).isNotNull(),
-                () -> assertThat(obj.getAge()).isEqualTo(22),
-                () -> assertThat(obj.getName()).isEqualTo("Alexey"),
-                () -> assertThat(obj.getUserId()).isNotNull()
+                () -> assertThat(users.get(0)).isNotNull(),
+                () -> assertThat(users.get(0).getAge()).isEqualTo(22),
+                () -> assertThat(users.get(0).getName()).isEqualTo("Alexey"),
+                () -> assertThat(users.get(0).getUserId()).isNotNull()
         );
     }
 }
