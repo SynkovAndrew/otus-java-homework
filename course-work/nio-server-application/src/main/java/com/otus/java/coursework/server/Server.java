@@ -1,8 +1,6 @@
 package com.otus.java.coursework.server;
 
-import com.otus.java.coursework.serialization.Serializer;
-import com.otus.java.coursework.server.executor.ServerRequestExecutor;
-import com.otus.java.coursework.utils.Mapper;
+import com.otus.java.coursework.storage.DataStorage;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,20 +15,17 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
-import static java.nio.ByteBuffer.wrap;
-
 @Slf4j
 @Component
 public class Server {
-    private final static byte END_OF_MESSAGE = '\n';
-    private final ServerRequestExecutor executor;
-    private final Serializer serializer;
+    private final DataStorage dataStorage;
     private final ExecutorService serverRunner;
     private final Map<Integer, ByteBuffer> socketChannels;
     @Value("${server.socket.host}")
@@ -40,18 +35,16 @@ public class Server {
     private Selector selector;
     private ServerSocketChannel serverSocketChannel;
 
-    public Server(final ServerRequestExecutor executor,
-                  final Serializer serializer,
+    public Server(final DataStorage dataStorage,
                   final ExecutorService serverRunner) {
         this.socketChannels = new ConcurrentHashMap<>();
-        this.executor = executor;
-        this.serializer = serializer;
+        this.dataStorage = dataStorage;
         this.serverRunner = serverRunner;
     }
 
     private void accept() {
         SocketChannelUtils.accept(selector, serverSocketChannel).ifPresent(client -> {
-            socketChannels.put(client.hashCode(), ByteBuffer.allocate(1024));
+            socketChannels.put(client.hashCode(), ByteBuffer.allocate(256));
             log.info("Client {}'s been connected to server", SocketChannelUtils.getRemoteAddress(client).get());
         });
     }
@@ -83,8 +76,14 @@ public class Server {
             socketChannels.remove(client.hashCode());
             SocketChannelUtils.close(client);
         }
+        buffer.flip();
+        log.info("{} bytes've been read", readBytes);
+        if (readBytes > 0) {
+            dataStorage.putBytes(client.hashCode(),
+                    Arrays.copyOfRange(buffer.array(), buffer.position(), buffer.limit()));
+        }
 
-        if (readBytes > 0 && END_OF_MESSAGE == buffer.get(buffer.position() - 1)) {
+/*        if (readBytes > 0 && END_OF_MESSAGE == buffer.get(buffer.position() - 1)) {
             SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
             buffer.flip();
             final var json = new String(buffer.array(), buffer.position(), buffer.limit())
@@ -93,7 +92,7 @@ public class Server {
                 executor.acceptRequest(client.hashCode(), message.getContent());
                 log.info("Message {} from {} 's been received", message, SocketChannelUtils.getRemoteAddress(client).get());
             });
-        }
+        }*/
     }
 
     private void run() {
@@ -119,7 +118,7 @@ public class Server {
 
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
-        executor.getResponse(client.hashCode()).flatMap(Mapper::map).ifPresent(json -> {
+      /*  executor.getResponse(client.hashCode()).flatMap(Mapper::map).ifPresent(json -> {
             final ByteBuffer buffer = socketChannels.get(client.hashCode());
             buffer.clear();
             buffer.put(wrap(json.getBytes()));
@@ -131,6 +130,6 @@ public class Server {
                 buffer.compact();
                 SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
             }
-        });
+        });*/
     }
 }

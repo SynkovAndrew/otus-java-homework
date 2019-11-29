@@ -6,6 +6,7 @@ import com.otus.java.coursework.dto.CreateUserRequestDTO;
 import com.otus.java.coursework.dto.UserDTO;
 import com.otus.java.coursework.repository.MongoRepository;
 import com.otus.java.coursework.utils.Mapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static java.util.stream.Collectors.toList;
 
 @Service
+@ConditionalOnProperty(name = "server.action.executor.implementation", havingValue = "database")
 public class UserDBServiceImpl implements UserDBService {
     private final AtomicLong id;
     private final MongoRepository<User> repository;

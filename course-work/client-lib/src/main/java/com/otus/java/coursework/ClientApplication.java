@@ -10,13 +10,12 @@ public class ClientApplication {
     public static void main(String[] args) {
         try (final var client = new Client("localhost", 4455)) {
             for (int i = 1; i < 100; i++) {
-                client.send(CreateUserRequestDTO.builder()
-                        .age(i)
-                        .name("Human " + i)
-                        .build());
+                client.send(("Hello " + i).getBytes());
+                Thread.sleep(3000);
             }
         } catch (FailedToCreateClientException e) {
             log.error("Failed o create client", e);
+        } catch (InterruptedException ignored) {
         }
     }
 }

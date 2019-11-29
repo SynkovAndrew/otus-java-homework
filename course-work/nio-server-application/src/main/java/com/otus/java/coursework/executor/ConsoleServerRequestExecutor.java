@@ -1,4 +1,4 @@
-package com.otus.java.coursework.server.executor;
+package com.otus.java.coursework.executor;
 
 import com.otus.java.coursework.dto.BaseDTO;
 import lombok.extern.slf4j.Slf4j;
