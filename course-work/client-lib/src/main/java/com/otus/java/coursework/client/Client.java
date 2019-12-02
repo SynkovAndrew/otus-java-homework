@@ -11,10 +11,14 @@ import java.nio.channels.SocketChannel;
 @Slf4j
 public class Client implements AutoCloseable {
     private final SocketChannel socketChannel;
+    private final Serializer serializer;
 
-    public Client(final String host, final int port) throws FailedToCreateClientException {
+    public Client(final String host,
+                  final int port, final
+                  Serializer serializer) throws FailedToCreateClientException {
         this.socketChannel = SocketChannelUtils.openSocketChannel(host, port)
                 .orElseThrow(FailedToCreateClientException::new);
+        this.serializer = serializer;
     }
 
     @Override
@@ -22,9 +26,11 @@ public class Client implements AutoCloseable {
         SocketChannelUtils.close(socketChannel);
     }
 
-    public void send(final byte[] bytes) {
-        final var buffer = ByteBuffer.wrap(bytes);
-        SocketChannelUtils.write(socketChannel, buffer);
-        buffer.clear();
+    public void send(final Object object) {
+        serializer.writeObject(object).ifPresent(bytes -> {
+            final var buffer = ByteBuffer.wrap(bytes);
+            SocketChannelUtils.write(socketChannel, buffer);
+            buffer.clear();
+        });
     }
 }

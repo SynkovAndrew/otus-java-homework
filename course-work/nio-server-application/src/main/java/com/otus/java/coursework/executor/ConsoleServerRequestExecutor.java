@@ -1,12 +1,9 @@
 package com.otus.java.coursework.executor;
 
-import com.otus.java.coursework.dto.BaseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-
-import static com.otus.java.coursework.utils.Mapper.map;
 
 @Slf4j
 @Service
@@ -18,10 +15,10 @@ public class ConsoleServerRequestExecutor extends AbstractServerRequestExecutor 
     }
 
     @Override
-    public void acceptRequest(final int clientId, final BaseDTO dto) {
+    public void acceptRequest(final int clientId, final Object object) {
         executeRequest(clientId, () -> {
-            map(dto).ifPresent(json -> log.info("Data {} from client {} has been received", json, clientId));
-            return dto;
+            log.info("Data {} from client {} has been received", object, clientId);
+            return object;
         });
     }
 }

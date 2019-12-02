@@ -1,6 +1,6 @@
 package com.otus.java.coursework.server;
 
-import com.otus.java.coursework.storage.DataStorage;
+import com.otus.java.coursework.serialization.Serializer;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,25 +8,24 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Component
 public class Server {
-    private final DataStorage dataStorage;
     private final ExecutorService serverRunner;
+    private final Serializer serializer;
     private final Map<Integer, ByteBuffer> socketChannels;
     @Value("${server.socket.host}")
     private String host;
@@ -35,11 +34,11 @@ public class Server {
     private Selector selector;
     private ServerSocketChannel serverSocketChannel;
 
-    public Server(final DataStorage dataStorage,
-                  final ExecutorService serverRunner) {
+    public Server(final ExecutorService serverRunner,
+                  final Serializer serializer) {
         this.socketChannels = new ConcurrentHashMap<>();
-        this.dataStorage = dataStorage;
         this.serverRunner = serverRunner;
+        this.serializer = serializer;
     }
 
     private void accept() {
@@ -79,8 +78,8 @@ public class Server {
         buffer.flip();
         log.info("{} bytes've been read", readBytes);
         if (readBytes > 0) {
-            dataStorage.putBytes(client.hashCode(),
-                    Arrays.copyOfRange(buffer.array(), buffer.position(), buffer.limit()));
+            final byte[] bytes = Arrays.copyOfRange(buffer.array(), buffer.position(), buffer.limit());
+            serializer.readObject(bytes).ifPresent(object -> log.info("Message has been received: {}", object));
         }
 
 /*        if (readBytes > 0 && END_OF_MESSAGE == buffer.get(buffer.position() - 1)) {

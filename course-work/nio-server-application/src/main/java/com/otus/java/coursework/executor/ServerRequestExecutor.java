@@ -1,11 +1,9 @@
 package com.otus.java.coursework.executor;
 
-import com.otus.java.coursework.dto.BaseDTO;
-
 import java.util.Optional;
 
 public interface ServerRequestExecutor {
-    void acceptRequest(int clientId, BaseDTO json);
+    void acceptRequest(int clientId, Object object);
 
-    Optional<BaseDTO> getResponse(final int clientId);
+    Optional<Object> getResponse(final int clientId);
 }

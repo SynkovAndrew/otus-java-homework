@@ -1,6 +1,5 @@
 package com.otus.java.coursework.service;
 
-import com.otus.java.coursework.dto.BaseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,7 +11,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 
-import static com.otus.java.coursework.utils.Mapper.map;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
@@ -37,15 +35,14 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void writeToFile(final String fileName, final BaseDTO dto) {
-        openOrCreateFile(folderName, fileName).ifPresent(file ->
-                map(dto).ifPresent(json -> {
-                    try {
-                        Files.write(file.toPath(), (json + "\n").getBytes(), StandardOpenOption.APPEND);
-                        log.info("Message {} has been written to file {}", dto, fileName);
-                    } catch (IOException e) {
-                        log.error("Failed to write text to file", e);
-                    }
-                }));
+    public void writeToFile(final String fileName, final Object object) {
+        openOrCreateFile(folderName, fileName).ifPresent(file -> {
+            try {
+                Files.write(file.toPath(), (object.toString()).getBytes(), StandardOpenOption.APPEND);
+                log.info("Message {} has been written to file {}", object, fileName);
+            } catch (IOException e) {
+                log.error("Failed to write text to file", e);
+            }
+        });
     }
 }

@@ -18,7 +18,8 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 public class SocketChannelUtils {
 
-    public static Optional<SocketChannel> accept(final Selector selector, final ServerSocketChannel serverSocketChannel) {
+    public static Optional<SocketChannel> accept(final Selector selector,
+                                                 final ServerSocketChannel serverSocketChannel) {
         try {
             final var client = serverSocketChannel.accept();
             client.configureBlocking(false);
@@ -38,7 +39,8 @@ public class SocketChannelUtils {
         }
     }
 
-    public static void destroy(final Selector selector, final ServerSocketChannel serverSocketChannel) {
+    public static void destroy(final Selector selector,
+                               final ServerSocketChannel serverSocketChannel) {
         try {
             selector.close();
             serverSocketChannel.close();
@@ -56,7 +58,8 @@ public class SocketChannelUtils {
         }
     }
 
-    public static Optional<SocketChannel> openSocketChannel(final String host, final int port) {
+    public static Optional<SocketChannel> openSocketChannel(final String host,
+                                                            final int port) {
         try {
             return ofNullable(SocketChannel.open(new InetSocketAddress(host, port)));
         } catch (IOException e) {
@@ -65,7 +68,8 @@ public class SocketChannelUtils {
         }
     }
 
-    public static int read(final SocketChannel socketChannel, final ByteBuffer buffer) {
+    public static int read(final SocketChannel socketChannel,
+                           final ByteBuffer buffer) {
         try {
             return socketChannel.read(buffer);
         } catch (IOException e) {
@@ -74,7 +78,9 @@ public class SocketChannelUtils {
         }
     }
 
-    public static void register(final Selector selector, final SocketChannel socketChannel, final int selectionKey) {
+    public static void register(final Selector selector,
+                                final SocketChannel socketChannel,
+                                final int selectionKey) {
         try {
             socketChannel.register(selector, selectionKey);
         } catch (IOException e) {
@@ -90,7 +96,8 @@ public class SocketChannelUtils {
         }
     }
 
-    public static int write(final SocketChannel socketChannel, final ByteBuffer buffer) {
+    public static int write(final SocketChannel socketChannel,
+                            final ByteBuffer buffer) {
         try {
             return socketChannel.write(buffer);
         } catch (IOException e) {
