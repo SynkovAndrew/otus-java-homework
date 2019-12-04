@@ -27,7 +27,7 @@ public class Client implements AutoCloseable {
     }
 
     public void send(final Object object) {
-        serializer.writeObject(object).ifPresent(bytes -> {
+        serializer.writeObject(object, object.getClass()).ifPresent(bytes -> {
             final var buffer = ByteBuffer.wrap(bytes);
             SocketChannelUtils.write(socketChannel, buffer);
             buffer.clear();
