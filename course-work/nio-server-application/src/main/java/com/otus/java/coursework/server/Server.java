@@ -16,7 +16,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -84,8 +83,8 @@ public class Server {
         if (readBytes > 0) {
             SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
             buffer.flip();
-            log.info("{} bytes've been read", readBytes);
-            final byte[] bytes = Arrays.copyOfRange(buffer.array(), buffer.position(), buffer.limit());
+            log.info("{} bytes've been read from {}", readBytes, SocketChannelUtils.getRemoteAddress(client).get());
+            final byte[] bytes = buffer.array();
             serializer.readObject(bytes, Object.class)
                     .ifPresent(object -> executor.acceptRequest(client.hashCode(), object));
         }
@@ -114,8 +113,9 @@ public class Server {
 
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
-        executor.getResponse(client.hashCode()).ifPresent(object ->
-                serializer.writeObject(object).ifPresent(bytes -> {
+        executor.getResponse(client.hashCode())
+                .flatMap(serializer::writeObject)
+                .ifPresent(bytes -> {
                     final ByteBuffer buffer = socketChannels.get(client.hashCode());
                     buffer.clear();
                     buffer.put(wrap(bytes));
@@ -127,6 +127,6 @@ public class Server {
                         buffer.compact();
                         SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
                     }
-                }));
+                });
     }
 }
