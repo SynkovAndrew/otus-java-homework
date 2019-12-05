@@ -25,8 +25,8 @@ public class SerializerTest {
                 .lastName("Pervomayski")
                 .userId(10001)
                 .build();
-        final byte[] bytes = serializer.writeObject(user, UserDTO.class).get();
-        final UserDTO restored = (UserDTO) serializer.readObject(bytes).get();
+        final byte[] bytes = serializer.writeObject(user).get();
+        final UserDTO restored = serializer.readObject(bytes, UserDTO.class).get();
         assertNotNull(restored);
         assertEquals(10001, restored.getUserId());
         assertEquals("Vlad", restored.getFirstName());

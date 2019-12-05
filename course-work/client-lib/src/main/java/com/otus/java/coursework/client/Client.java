@@ -5,8 +5,10 @@ import com.otus.java.coursework.serialization.Serializer;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+
+import static com.otus.java.coursework.utils.SocketChannelUtils.*;
+import static java.nio.ByteBuffer.wrap;
 
 @Slf4j
 public class Client implements AutoCloseable {
@@ -16,7 +18,7 @@ public class Client implements AutoCloseable {
     public Client(final String host,
                   final int port, final
                   Serializer serializer) throws FailedToCreateClientException {
-        this.socketChannel = SocketChannelUtils.openSocketChannel(host, port)
+        this.socketChannel = openSocketChannel(host, port)
                 .orElseThrow(FailedToCreateClientException::new);
         this.serializer = serializer;
     }
@@ -27,10 +29,15 @@ public class Client implements AutoCloseable {
     }
 
     public void send(final Object object) {
-        serializer.writeObject(object, object.getClass()).ifPresent(bytes -> {
-            final var buffer = ByteBuffer.wrap(bytes);
-            SocketChannelUtils.write(socketChannel, buffer);
+        serializer.writeObject(object).ifPresent(bytes -> {
+            final var buffer = wrap(bytes);
+            write(socketChannel, buffer);
             buffer.clear();
+            final int readBytes = read(socketChannel, buffer);
+            if (readBytes > 0) {
+                serializer.readObject(buffer.array(), Object.class)
+                        .ifPresent(response -> log.info("Server responded with: {}", response));
+            }
         });
     }
 }

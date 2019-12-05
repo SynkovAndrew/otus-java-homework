@@ -1,32 +1,24 @@
 package com.otus.java.coursework.serialization;
 
-import com.otus.java.coursework.dto.SerializableObject;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.util.Optional;
 
+import static java.util.Optional.*;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 
 @Slf4j
 public class SerializerImpl implements Serializer {
     @Override
-    public Optional<byte[]> writeObject(final Object object, final Class clazz) {
+    public Optional<byte[]> writeObject(final Object object) {
         final var byteArrayOutputStream = new ByteArrayOutputStream();
         try (final var objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
             objectOutputStream.writeObject(object);
             objectOutputStream.flush();
-            final byte[] content = byteArrayOutputStream.toByteArray();
-
-            final var innerByteArrayOutputStream = new ByteArrayOutputStream();
-            try (final var innerObjectOutputStream = new ObjectOutputStream(innerByteArrayOutputStream)) {
-                final var serializableObject = new SerializableObject(content, clazz);
-                innerObjectOutputStream.writeObject(serializableObject);
-                innerObjectOutputStream.flush();
-                final byte[] bytes = innerByteArrayOutputStream.toByteArray();
-                return ofNullable(bytes);
-            }
+            final byte[] bytes = byteArrayOutputStream.toByteArray();
+            return of(bytes);
         } catch (IOException e) {
             log.info("Failed to serialize object: {}", object);
             return empty();
@@ -34,18 +26,11 @@ public class SerializerImpl implements Serializer {
     }
 
     @Override
-    public  Optional<Object> readObject(final byte[] bytes) {
+    public <T> Optional<T> readObject(final byte[] bytes, final Class<T> clazz) {
         final var byteArrayInputStream = new ByteArrayInputStream(bytes);
         try (final var objectInputStream = new ObjectInputStream(byteArrayInputStream)) {
-            final SerializableObject serializableObject = (SerializableObject) objectInputStream.readObject();
-            final Class clazz = serializableObject.getClazz();
-            final byte[] content = serializableObject.getContent();
-
-            final var innerByteArrayInputStream = new ByteArrayInputStream(content);
-            try (final var innerObjectInputStream = new ObjectInputStream(innerByteArrayInputStream)) {
-                final Object o = innerObjectInputStream.readObject();
-                return ofNullable(o);
-            }
+            final Object object = objectInputStream.readObject();
+            return ofNullable(clazz.cast(object));
         } catch (IOException | ClassNotFoundException e) {
             log.info("Failed to deserialize object");
             return empty();
