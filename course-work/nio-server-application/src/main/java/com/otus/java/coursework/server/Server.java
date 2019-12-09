@@ -16,21 +16,27 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 
+import static com.otus.java.coursework.utils.ByteArrayUtils.*;
 import static java.nio.ByteBuffer.wrap;
 
 @Slf4j
 @Component
 public class Server {
+    private final static int INITIAL_BYTE_BUFFER_SIZE = 128;
     private final ServerRequestExecutor executor;
     private final ExecutorService serverRunner;
     private final Serializer serializer;
-    private final Map<Integer, ByteBuffer> socketChannels;
+    private final ConcurrentMap<Integer, ByteBuffer> byteBuffers;
+    private final ConcurrentMap<Integer, List<byte[]>> byteArrays;
     @Value("${server.socket.host}")
     private String host;
     @Value("${server.socket.port}")
@@ -41,7 +47,8 @@ public class Server {
     public Server(final ServerRequestExecutor executor,
                   final ExecutorService serverRunner,
                   final Serializer serializer) {
-        this.socketChannels = new ConcurrentHashMap<>();
+        this.byteBuffers = new ConcurrentHashMap<>();
+        this.byteArrays = new ConcurrentHashMap<>();
         this.executor = executor;
         this.serverRunner = serverRunner;
         this.serializer = serializer;
@@ -49,7 +56,8 @@ public class Server {
 
     private void accept() {
         SocketChannelUtils.accept(selector, serverSocketChannel).ifPresent(client -> {
-            socketChannels.put(client.hashCode(), ByteBuffer.allocate(256));
+            byteBuffers.put(client.hashCode(), ByteBuffer.allocate(INITIAL_BYTE_BUFFER_SIZE));
+            byteArrays.put(client.hashCode(), new CopyOnWriteArrayList<>());
             log.info("Client {}'s been connected to server", SocketChannelUtils.getRemoteAddress(client).get());
         });
     }
@@ -72,21 +80,39 @@ public class Server {
 
     private void read(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
-        final ByteBuffer buffer = socketChannels.get(client.hashCode());
+        final int clientId = client.hashCode();
+        final ByteBuffer buffer = byteBuffers.get(clientId);
         final int readBytes = SocketChannelUtils.read(client, buffer);
         // in case of result is equal to -1 the connection's closed from client side
         if (readBytes == -1) {
             log.info("{} connection's been closed", SocketChannelUtils.getRemoteAddress(client).get());
-            socketChannels.remove(client.hashCode());
+            byteBuffers.remove(clientId);
             SocketChannelUtils.close(client);
         }
         if (readBytes > 0) {
             SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
             buffer.flip();
             log.info("{} bytes've been read from {}", readBytes, SocketChannelUtils.getRemoteAddress(client).get());
+
+            // take all bytes which has just been read from socket channel
             final byte[] bytes = buffer.array();
-            serializer.readObject(bytes, Object.class)
-                    .ifPresent(object -> executor.acceptRequest(client.hashCode(), object));
+
+            // split all read bytes by defined delimiter
+            final SplitResult splitResult = split(BYTE_ARRAY_DELIMITER, bytes);
+            final int partCount = splitResult.getParts().size();
+
+            // if there is no delimiter in the end of last part bytes, then the last byte part is not completely received
+            if (!splitResult.isLastPartFinished()) {
+                final byte[] lastPart = splitResult.getParts().get(partCount - 1);
+                byteArrays.get(clientId).add(lastPart);
+            }
+
+            // all the byte arrays here are complete, so they can be deserialized
+            for (int i = 0; i < partCount - 1; i++) {
+                final byte[] part = splitResult.getParts().get(i);
+                serializer.readObject(part, Object.class)
+                        .ifPresent(object -> executor.acceptRequest(clientId, object));
+            }
         }
     }
 
@@ -116,7 +142,7 @@ public class Server {
         executor.getResponse(client.hashCode())
                 .flatMap(serializer::writeObject)
                 .ifPresent(bytes -> {
-                    final ByteBuffer buffer = socketChannels.get(client.hashCode());
+                    final ByteBuffer buffer = byteBuffers.get(client.hashCode());
                     buffer.clear();
                     buffer.put(wrap(bytes));
                     buffer.flip();
