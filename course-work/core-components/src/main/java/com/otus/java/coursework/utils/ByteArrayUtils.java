@@ -1,10 +1,5 @@
 package com.otus.java.coursework.utils;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,12 +34,19 @@ public class ByteArrayUtils {
     }
 
     public static SplitResult split(final byte[] pattern,
-                                    final byte[] input) {
-        final var parts = new ArrayList<byte[]>();
+                                    final byte[] input,
+                                    final boolean lastChunkComplete) {
+        final var chunks = new ArrayList<Chunk>();
         int blockStart = 0;
         for (int i = 0; i < input.length; i++) {
             if (isMatch(pattern, input, i)) {
-                parts.add(copyOfRange(input, blockStart, i));
+                final boolean isChunkCompleted = chunks.size() != 0 || lastChunkComplete;
+                final Chunk chunk = Chunk.builder()
+                        .bytes(copyOfRange(input, blockStart, i))
+                        .isCompleted(isChunkCompleted)
+                        .isLast(true)
+                        .build();
+                chunks.add(chunk);
                 blockStart = i + pattern.length;
                 i = blockStart;
             }
@@ -53,16 +55,28 @@ public class ByteArrayUtils {
         final byte[] lastPart = copyOfRange(input, blockStart, input.length);
         if (lastPart.length != 0) {
             lastPartFinished = false;
-            parts.add(lastPart);
+            final Chunk chunk = Chunk.builder()
+                    .bytes(lastPart)
+                    .isCompleted(false)
+                    .isLast(false)
+                    .build();
+            chunks.add(chunk);
         }
         return SplitResult.builder()
-                .parts(parts)
-                .lastPartFinished(lastPartFinished)
+                .chunks(chunks)
                 .build();
     }
 
     public static void fill(final byte[] target,
                             final byte[]... sources) {
+        final AtomicInteger i = new AtomicInteger(0);
+        for (final byte[] source : sources) {
+            fill(target, source, i);
+        }
+    }
+
+    public static void fill(final byte[] target,
+                            final List<byte[]> sources) {
         final AtomicInteger i = new AtomicInteger(0);
         for (final byte[] source : sources) {
             fill(target, source, i);
@@ -75,14 +89,5 @@ public class ByteArrayUtils {
         for (byte b : source) {
             target[position.getAndIncrement()] = b;
         }
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class SplitResult {
-        private List<byte[]> parts;
-        private boolean lastPartFinished;
     }
 }
