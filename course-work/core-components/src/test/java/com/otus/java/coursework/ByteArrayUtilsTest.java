@@ -4,6 +4,8 @@ import com.otus.java.coursework.utils.ByteArrayUtils;
 import com.otus.java.coursework.utils.SplitResult;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static com.otus.java.coursework.utils.ByteArrayUtils.BYTE_ARRAY_DELIMITER;
 import static com.otus.java.coursework.utils.ByteArrayUtils.fill;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +22,7 @@ public class ByteArrayUtilsTest {
 
         fill(concatenated, part1, BYTE_ARRAY_DELIMITER, part2, BYTE_ARRAY_DELIMITER, part3, BYTE_ARRAY_DELIMITER);
 
-        final SplitResult splitResult = ByteArrayUtils.split(BYTE_ARRAY_DELIMITER, concatenated, true);
+        final SplitResult splitResult = ByteArrayUtils.split(BYTE_ARRAY_DELIMITER, concatenated);
         assertThat(splitResult).isNotNull();
         assertThat(splitResult.getChunks()).hasSize(3);
         assertThat(splitResult.getChunks()).extracting("bytes")
@@ -39,7 +41,7 @@ public class ByteArrayUtilsTest {
 
         fill(concatenated, part1, BYTE_ARRAY_DELIMITER, part2, BYTE_ARRAY_DELIMITER, part3);
 
-        final SplitResult splitResult = ByteArrayUtils.split(BYTE_ARRAY_DELIMITER, concatenated, true);
+        final SplitResult splitResult = ByteArrayUtils.split(BYTE_ARRAY_DELIMITER, concatenated);
         assertThat(splitResult).isNotNull();
         assertThat(splitResult.getChunks()).hasSize(3);
         assertThat(splitResult.getChunks()).extracting("bytes")
@@ -60,14 +62,34 @@ public class ByteArrayUtilsTest {
 
         fill(concatenated, part1, BYTE_ARRAY_DELIMITER, part2, BYTE_ARRAY_DELIMITER, part3);
 
-        final SplitResult splitResult = ByteArrayUtils.split(BYTE_ARRAY_DELIMITER, concatenated, false);
+        final SplitResult splitResult = ByteArrayUtils.split(BYTE_ARRAY_DELIMITER, concatenated);
         assertThat(splitResult).isNotNull();
         assertThat(splitResult.getChunks()).hasSize(3);
         assertThat(splitResult.getChunks()).extracting("bytes")
                 .containsExactly(part1, part2, part3);
         assertThat(splitResult.getChunks()).extracting("isCompleted")
-                .containsExactly(false, true, false);
+                .containsExactly(true, true, false);
         assertThat(splitResult.getChunks()).extracting("isLast")
                 .containsExactly(true, true, false);
+    }
+
+    @Test
+    public void splitWhenDelimiterIsNotFull() {
+        final byte[] part1 = "Hello!".getBytes();
+        final int middle = BYTE_ARRAY_DELIMITER.length / 2;
+        final byte[] partOfDelimiter = Arrays.copyOfRange(BYTE_ARRAY_DELIMITER, 0, middle);
+        final byte[] concatenated = new byte[part1.length + middle];
+
+        fill(concatenated, part1, partOfDelimiter);
+
+        final SplitResult splitResult = ByteArrayUtils.split(BYTE_ARRAY_DELIMITER, concatenated);
+        assertThat(splitResult).isNotNull();
+        assertThat(splitResult.getChunks()).hasSize(1);
+        assertThat(splitResult.getChunks()).extracting("bytes")
+                .containsExactly(concatenated);
+        assertThat(splitResult.getChunks()).extracting("isCompleted")
+                .containsExactly(false);
+        assertThat(splitResult.getChunks()).extracting("isLast")
+                .containsExactly(false);
     }
 }

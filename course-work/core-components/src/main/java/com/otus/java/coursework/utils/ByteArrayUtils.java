@@ -26,7 +26,7 @@ public class ByteArrayUtils {
                                    final byte[] input,
                                    final int position) {
         for (int i = 0; i < pattern.length; i++) {
-            if (pattern[i] != input[position + i]) {
+            if (position + i > input.length - 1 || pattern[i] != input[position + i]) {
                 return false;
             }
         }
@@ -34,16 +34,14 @@ public class ByteArrayUtils {
     }
 
     public static SplitResult split(final byte[] pattern,
-                                    final byte[] input,
-                                    final boolean lastChunkComplete) {
+                                    final byte[] input) {
         final var chunks = new ArrayList<Chunk>();
         int blockStart = 0;
         for (int i = 0; i < input.length; i++) {
             if (isMatch(pattern, input, i)) {
-                final boolean isChunkCompleted = chunks.size() != 0 || lastChunkComplete;
                 final Chunk chunk = Chunk.builder()
                         .bytes(copyOfRange(input, blockStart, i))
-                        .isCompleted(isChunkCompleted)
+                        .isCompleted(true)
                         .isLast(true)
                         .build();
                 chunks.add(chunk);
@@ -51,10 +49,8 @@ public class ByteArrayUtils {
                 i = blockStart;
             }
         }
-        boolean lastPartFinished = true;
         final byte[] lastPart = copyOfRange(input, blockStart, input.length);
         if (lastPart.length != 0) {
-            lastPartFinished = false;
             final Chunk chunk = Chunk.builder()
                     .bytes(lastPart)
                     .isCompleted(false)

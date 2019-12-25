@@ -34,11 +34,11 @@ import static java.nio.ByteBuffer.wrap;
 @Slf4j
 @Component
 public class Server {
-    private final static int INITIAL_BYTE_BUFFER_SIZE = 512;
-    private final ServerRequestExecutor executor;
-    private final ExecutorService serverRunner;
-    private final Serializer serializer;
+    private final static int INITIAL_BYTE_BUFFER_SIZE = 26;
     private final ConcurrentMap<Integer, ByteBuffer> byteBuffers;
+    private final ServerRequestExecutor executor;
+    private final Serializer serializer;
+    private final ExecutorService serverRunner;
     private final ConcurrentMap<Integer, List<Chunk>> uncompletedChunkMap;
     @Value("${server.socket.host}")
     private String host;
@@ -96,36 +96,31 @@ public class Server {
             log.info("{} bytes've been read from {}", readBytes, SocketChannelUtils.getRemoteAddress(client).get());
             // take all bytes which has just been read from socket channel
             final byte[] bytes = buffer.array();
+
             // get uncompleted chunks
             final List<Chunk> uncompletedChunks = this.uncompletedChunkMap.get(clientId);
+
+            // add all uncompleted chunks to new received bytes
+            final int allBytesSize = uncompletedChunks.stream()
+                    .mapToInt(chunk -> chunk.getBytes().length)
+                    .sum() + bytes.length;
+            final List<byte[]> byteArrayList = Stream
+                    .concat(uncompletedChunks.stream().map(Chunk::getBytes), Stream.of(bytes))
+                    .collect(Collectors.toList());
+            final byte[] allBytes = new byte[allBytesSize];
+            fill(allBytes, byteArrayList);
+
+            // clear uncompleted chunks
+            uncompletedChunks.clear();
+
             // split all read bytes by defined delimiter
-            final SplitResult splitResult = split(BYTE_ARRAY_DELIMITER, bytes, uncompletedChunks.size() == 0);
+            final SplitResult splitResult = split(BYTE_ARRAY_DELIMITER, allBytes);
             final List<Chunk> currentIterationChunks = splitResult.getChunks();
             final int currentIterationChunksCount = currentIterationChunks.size();
 
             if (currentIterationChunksCount > 0) {
                 final Chunk firstChunk = currentIterationChunks.get(0);
-                // in first received chunk is marked as not completed and last, so it should be joined
-                // with collected uncompleted chunks in order to compose completed one
-                if (!firstChunk.isCompleted() && firstChunk.isLast()) {
-                    final int completeChunkSize = uncompletedChunks.stream()
-                            .mapToInt(chunk -> chunk.getBytes().length)
-                            .sum() + firstChunk.getBytes().length;
-                    final List<byte[]> byteArrayList = Stream.concat(uncompletedChunks.stream(), Stream.of(firstChunk))
-                            .map(Chunk::getBytes)
-                            .collect(Collectors.toList());
-                    final byte[] completeChunkBytes = new byte[completeChunkSize];
-                    fill(completeChunkBytes, byteArrayList);
-
-                    // once completed chunk is composed it passes to serializer
-                    serializer.readObject(completeChunkBytes, Object.class)
-                            .ifPresent(object -> executor.acceptRequest(clientId, object));
-                    // clear uncompleted chunks
-                    uncompletedChunks.clear();
-                    SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
-                }
-
-                // if there is no delimiter in the end of last chunk bytes, then tis chunk is not completely received
+                // if there is no delimiter in the end of last chunk bytes, then this chunk is not completely received
                 final Chunk lastChunk = currentIterationChunks.get(currentIterationChunksCount - 1);
                 if (!lastChunk.isCompleted() && !firstChunk.isLast()) {
                     uncompletedChunks.add(lastChunk);
@@ -171,7 +166,7 @@ public class Server {
                 .ifPresent(bytes -> {
                     final ByteBuffer buffer = byteBuffers.get(client.hashCode());
                     buffer.clear();
-                    buffer.put(wrap(bytes));
+                    buffer.put(wrap("bytes".getBytes()));
                     buffer.flip();
                     final int writtenBytes = SocketChannelUtils.write(client, buffer);
                     log.info("{} bytes've been written to {}",
