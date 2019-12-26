@@ -2,10 +2,9 @@ package com.otus.java.coursework.server;
 
 import com.otus.java.coursework.executor.ServerRequestExecutor;
 import com.otus.java.coursework.serialization.Serializer;
+import com.otus.java.coursework.service.ByteProcessorService;
 import com.otus.java.coursework.utils.ByteArrayUtils;
-import com.otus.java.coursework.utils.Chunk;
 import com.otus.java.coursework.utils.SocketChannelUtils;
-import com.otus.java.coursework.utils.SplitResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,16 +19,11 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static com.otus.java.coursework.utils.ByteArrayUtils.*;
 import static java.nio.ByteBuffer.wrap;
 
 @Slf4j
@@ -37,10 +31,10 @@ import static java.nio.ByteBuffer.wrap;
 public class Server {
     private final static int INITIAL_BYTE_BUFFER_SIZE = 26;
     private final ConcurrentMap<Integer, ByteBuffer> byteBuffers;
+    private final ByteProcessorService byteProcessorService;
     private final ServerRequestExecutor executor;
     private final Serializer serializer;
     private final ExecutorService serverRunner;
-    private final ConcurrentMap<Integer, List<Chunk>> uncompletedChunkMap;
     @Value("${server.socket.host}")
     private String host;
     @Value("${server.socket.port}")
@@ -50,18 +44,20 @@ public class Server {
 
     public Server(final ServerRequestExecutor executor,
                   final ExecutorService serverRunner,
-                  final Serializer serializer) {
+                  final Serializer serializer,
+                  final ByteProcessorService byteProcessorService) {
         this.byteBuffers = new ConcurrentHashMap<>();
-        this.uncompletedChunkMap = new ConcurrentHashMap<>();
         this.executor = executor;
         this.serverRunner = serverRunner;
         this.serializer = serializer;
+        this.byteProcessorService = byteProcessorService;
     }
 
     private void accept() {
         SocketChannelUtils.accept(selector, serverSocketChannel).ifPresent(client -> {
-            byteBuffers.put(client.hashCode(), ByteBuffer.allocate(INITIAL_BYTE_BUFFER_SIZE));
-            uncompletedChunkMap.put(client.hashCode(), new CopyOnWriteArrayList<>());
+            final var clientId = client.hashCode();
+            byteBuffers.put(clientId, ByteBuffer.allocate(INITIAL_BYTE_BUFFER_SIZE));
+            byteProcessorService.initializeChunk(clientId);
             log.info("Client {}'s been connected to server", SocketChannelUtils.getRemoteAddress(client).get());
         });
     }
@@ -96,46 +92,13 @@ public class Server {
             buffer.flip();
             log.info("{} bytes've been read from {}", readBytes, SocketChannelUtils.getRemoteAddress(client).get());
             // take all bytes which has just been read from socket channel
-            final byte[] bytes = buffer.array();
-
-            // get uncompleted chunks
-            final List<Chunk> uncompletedChunks = this.uncompletedChunkMap.get(clientId);
-
-            // add all uncompleted chunks to new received bytes
-            final int allBytesSize = uncompletedChunks.stream()
-                    .mapToInt(chunk -> chunk.getBytes().length)
-                    .sum() + bytes.length;
-            final List<byte[]> byteArrayList = Stream
-                    .concat(uncompletedChunks.stream().map(Chunk::getBytes), Stream.of(bytes))
-                    .collect(Collectors.toList());
-            final byte[] allBytes = new byte[allBytesSize];
-            fill(allBytes, byteArrayList);
-
-            // clear uncompleted chunks
-            uncompletedChunks.clear();
-
-            // split all read bytes by defined delimiter
-            final SplitResult splitResult = split(BYTE_ARRAY_DELIMITER, allBytes);
-            final List<Chunk> currentIterationChunks = splitResult.getChunks();
-            final int currentIterationChunksCount = currentIterationChunks.size();
-
-            if (currentIterationChunksCount > 0) {
-                final Chunk firstChunk = currentIterationChunks.get(0);
-                // if there is no delimiter in the end of last chunk bytes, then this chunk is not completely received
-                final Chunk lastChunk = currentIterationChunks.get(currentIterationChunksCount - 1);
-                if (!lastChunk.isCompleted() && !firstChunk.isLast()) {
-                    uncompletedChunks.add(lastChunk);
-                }
-
-                // all the chunks here are completed, so they can passed ro serializer
-                currentIterationChunks.stream()
-                        .filter(Chunk::isCompleted)
-                        .forEach(chunk -> serializer.readObject(chunk.getBytes(), Object.class)
-                                .ifPresent(object -> {
-                                    SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
-                                    executor.acceptRequest(clientId, object);
-                                }));
-            }
+            final byte[] receivedBytes = buffer.array();
+            byteProcessorService.getCompleteByteSets(clientId, receivedBytes)
+                    .forEach(bytes -> serializer.readObject(bytes, Object.class)
+                            .ifPresent(object -> {
+                                SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
+                                executor.acceptRequest(clientId, object);
+                            }));
         }
     }
 

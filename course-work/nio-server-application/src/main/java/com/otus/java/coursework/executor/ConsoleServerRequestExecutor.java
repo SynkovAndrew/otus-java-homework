@@ -17,7 +17,7 @@ public class ConsoleServerRequestExecutor extends AbstractServerRequestExecutor 
     @Override
     public void acceptRequest(final int clientId, final Object object) {
         executeRequest(clientId, () -> {
-            log.info("\nData {} from client {} has been received\n", object, clientId);
+            log.info("---> Data {} from client {} has been received", object, clientId);
             return object;
         });
     }
