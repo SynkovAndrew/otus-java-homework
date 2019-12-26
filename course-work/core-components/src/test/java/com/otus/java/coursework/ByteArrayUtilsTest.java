@@ -5,6 +5,7 @@ import com.otus.java.coursework.utils.SplitResult;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static com.otus.java.coursework.utils.ByteArrayUtils.BYTE_ARRAY_DELIMITER;
 import static com.otus.java.coursework.utils.ByteArrayUtils.fill;
@@ -91,5 +92,25 @@ public class ByteArrayUtilsTest {
                 .containsExactly(false);
         assertThat(splitResult.getChunks()).extracting("isLast")
                 .containsExactly(false);
+    }
+
+    @Test
+    public void parts_1() {
+        final byte[] bytes = "aaabbbcccddd".getBytes();
+
+        final var parts = ByteArrayUtils.parts(bytes, 3);
+        assertThat(parts).isNotNull();
+        assertThat(parts).hasSize(4);
+        assertThat(parts).containsExactly("aaa".getBytes(), "bbb".getBytes(), "ccc".getBytes(), "ddd".getBytes());
+    }
+
+    @Test
+    public void parts_2() {
+        final byte[] bytes = "abcdefg".getBytes();
+
+        final var parts = ByteArrayUtils.parts(bytes, 5);
+        assertThat(parts).isNotNull();
+        assertThat(parts).hasSize(2);
+        assertThat(parts).containsExactly("abcde".getBytes(), "fg".getBytes());
     }
 }

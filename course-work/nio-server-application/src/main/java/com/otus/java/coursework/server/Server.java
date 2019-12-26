@@ -2,6 +2,7 @@ package com.otus.java.coursework.server;
 
 import com.otus.java.coursework.executor.ServerRequestExecutor;
 import com.otus.java.coursework.serialization.Serializer;
+import com.otus.java.coursework.utils.ByteArrayUtils;
 import com.otus.java.coursework.utils.Chunk;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import com.otus.java.coursework.utils.SplitResult;
@@ -165,15 +166,17 @@ public class Server {
                 .flatMap(serializer::writeObject)
                 .ifPresent(bytes -> {
                     final ByteBuffer buffer = byteBuffers.get(client.hashCode());
-                    buffer.clear();
-                    buffer.put(wrap("bytes".getBytes()));
-                    buffer.flip();
-                    final int writtenBytes = SocketChannelUtils.write(client, buffer);
-                    log.info("{} bytes've been written to {}",
-                            writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
-                    if (!buffer.hasRemaining()) {
-                        buffer.compact();
-                        SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
+                    for (byte[] part : ByteArrayUtils.parts(bytes, INITIAL_BYTE_BUFFER_SIZE)) {
+                        buffer.clear();
+                        buffer.put(wrap(part));
+                        buffer.flip();
+                        final int writtenBytes = SocketChannelUtils.write(client, buffer);
+                        log.info("{} bytes've been written to {}",
+                                writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
+                        if (!buffer.hasRemaining()) {
+                            buffer.compact();
+                            SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
+                        }
                     }
                 });
     }
