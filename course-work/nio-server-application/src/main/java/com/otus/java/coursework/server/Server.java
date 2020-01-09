@@ -19,11 +19,13 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
+import static de.flapdoodle.embed.process.collections.Collections.newArrayList;
 import static java.nio.ByteBuffer.wrap;
 
 @Slf4j
@@ -31,7 +33,6 @@ import static java.nio.ByteBuffer.wrap;
 public class Server {
     private final static int INITIAL_BYTE_BUFFER_SIZE = 26;
     private final ConcurrentMap<Integer, ByteBuffer> byteBuffers;
-/*    private final ByteProcessorService byteProcessorService;*/
     private final ServerRequestExecutor executor;
     private final Serializer serializer;
     private final ExecutorService serverRunner;
@@ -44,20 +45,17 @@ public class Server {
 
     public Server(final ServerRequestExecutor executor,
                   final ExecutorService serverRunner,
-                  final Serializer serializer/*,
-                  final ByteProcessorService byteProcessorService*/) {
+                  final Serializer serializer) {
         this.byteBuffers = new ConcurrentHashMap<>();
         this.executor = executor;
         this.serverRunner = serverRunner;
         this.serializer = serializer;
-/*        this.byteProcessorService = byteProcessorService;*/
     }
 
     private void accept() {
         SocketChannelUtils.accept(selector, serverSocketChannel).ifPresent(client -> {
             final var clientId = client.hashCode();
             byteBuffers.put(clientId, ByteBuffer.allocate(INITIAL_BYTE_BUFFER_SIZE));
-/*            byteProcessorService.initializeChunk(clientId);*/
             log.info("Client {}'s been connected to server", SocketChannelUtils.getRemoteAddress(client).get());
         });
     }
@@ -82,24 +80,31 @@ public class Server {
         final SocketChannel client = (SocketChannel) key.channel();
         final int clientId = client.hashCode();
         final ByteBuffer buffer = byteBuffers.get(clientId);
-        final int readBytes = SocketChannelUtils.read(client, buffer);
-        // in case of result is equal to -1 the connection's closed from client side
+
+        final List<byte[]> byteArrays = newArrayList();
+        int readBytes = SocketChannelUtils.read(client, buffer);
+        while (readBytes > 0) {
+            buffer.flip();
+            log.info("{} bytes've been read from {}", readBytes, SocketChannelUtils.getRemoteAddress(client).get());
+            final byte[] receivedBytes = buffer.array();
+            byteArrays.add(receivedBytes);
+            buffer.flip();
+            buffer.clear();
+            readBytes = SocketChannelUtils.read(client, buffer);
+        }
         if (readBytes == -1) {
+            // in case of result is equal to -1 the connection's closed from client side
             log.info("{} connection's been closed", SocketChannelUtils.getRemoteAddress(client).get());
             byteBuffers.remove(clientId);
             SocketChannelUtils.close(client);
-        } else if (readBytes > 0) {
-            buffer.flip();
-            log.info("{} bytes've been read from {}", readBytes, SocketChannelUtils.getRemoteAddress(client).get());
-            // take all bytes which has just been read from socket channel
-            final byte[] receivedBytes = buffer.array();
-/*            byteProcessorService.getCompleteByteSets(clientId, receivedBytes)
-                    .forEach(bytes -> serializer.readObject(bytes, Object.class)
-                            .ifPresent(object -> {
-                                SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
-                                executor.acceptRequest(clientId, object);
-                            }));*/
         }
+
+        final byte[] bytes = ByteArrayUtils.flatMap(byteArrays);
+        serializer.readObject(bytes)
+                .ifPresent(object -> {
+                    SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
+                    executor.acceptRequest(clientId, object);
+                });
     }
 
     private void run() {

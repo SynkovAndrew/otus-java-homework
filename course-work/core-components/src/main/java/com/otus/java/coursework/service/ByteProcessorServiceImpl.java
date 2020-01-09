@@ -1,17 +1,11 @@
 package com.otus.java.coursework.service;
 
 import com.otus.java.coursework.utils.Chunk;
-import com.otus.java.coursework.utils.SplitResult;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Stream;
-
-import static com.otus.java.coursework.utils.ByteArrayUtils.*;
-import static java.util.stream.Collectors.toList;
 
 public class ByteProcessorServiceImpl implements ByteProcessorService {
     private final ConcurrentMap<Integer, List<Chunk>> uncompletedChunkMap;
@@ -22,7 +16,7 @@ public class ByteProcessorServiceImpl implements ByteProcessorService {
 
     @Override
     public List<byte[]> getCompleteByteSets(final int clientId, final byte[] receivedBytes) {
-        // get uncompleted chunks
+/*        // get uncompleted chunks
         final List<Chunk> uncompletedChunks = this.uncompletedChunkMap.get(clientId);
 
         // add all uncompleted chunks to new received bytes
@@ -55,7 +49,7 @@ public class ByteProcessorServiceImpl implements ByteProcessorService {
                     .map(Chunk::getBytes)
                     .collect(toList());
         }
-        return Collections.emptyList();
+        return Collections.emptyList();*/
     }
 
     @Override
