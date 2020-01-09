@@ -97,14 +97,14 @@ public class Server {
             log.info("{} connection's been closed", SocketChannelUtils.getRemoteAddress(client).get());
             byteBuffers.remove(clientId);
             SocketChannelUtils.close(client);
+        } else {
+            final byte[] bytes = ByteArrayUtils.flatMap(byteArrays);
+            serializer.readObject(bytes)
+                    .ifPresent(object -> {
+                        SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
+                        executor.acceptRequest(clientId, object);
+                    });
         }
-
-        final byte[] bytes = ByteArrayUtils.flatMap(byteArrays);
-        serializer.readObject(bytes)
-                .ifPresent(object -> {
-                    SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
-                    executor.acceptRequest(clientId, object);
-                });
     }
 
     private void run() {
@@ -116,11 +116,9 @@ public class Server {
                 SelectionKey key = iter.next();
                 if (key.isAcceptable()) {
                     accept();
-                }
-                if (key.isReadable()) {
+                } else if (key.isReadable()) {
                     read(key);
-                }
-                if (key.isWritable()) {
+                } else if (key.isWritable()) {
                     write(key);
                 }
                 iter.remove();

@@ -50,6 +50,7 @@ public class ByteProcessorServiceImpl implements ByteProcessorService {
                     .collect(toList());
         }
         return Collections.emptyList();*/
+        return null;
     }
 
     @Override

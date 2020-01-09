@@ -88,11 +88,12 @@ public class SocketChannelUtils {
         }
     }
 
-    public static void select(final Selector selector) {
+    public static int select(final Selector selector) {
         try {
-            selector.select();
+            return selector.select();
         } catch (IOException e) {
             log.info("Failed to select", e);
+            return 0;
         }
     }
 
