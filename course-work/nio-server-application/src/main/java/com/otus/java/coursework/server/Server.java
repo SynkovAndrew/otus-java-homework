@@ -31,7 +31,7 @@ import static java.nio.ByteBuffer.wrap;
 public class Server {
     private final static int INITIAL_BYTE_BUFFER_SIZE = 26;
     private final ConcurrentMap<Integer, ByteBuffer> byteBuffers;
-    private final ByteProcessorService byteProcessorService;
+/*    private final ByteProcessorService byteProcessorService;*/
     private final ServerRequestExecutor executor;
     private final Serializer serializer;
     private final ExecutorService serverRunner;
@@ -44,20 +44,20 @@ public class Server {
 
     public Server(final ServerRequestExecutor executor,
                   final ExecutorService serverRunner,
-                  final Serializer serializer,
-                  final ByteProcessorService byteProcessorService) {
+                  final Serializer serializer/*,
+                  final ByteProcessorService byteProcessorService*/) {
         this.byteBuffers = new ConcurrentHashMap<>();
         this.executor = executor;
         this.serverRunner = serverRunner;
         this.serializer = serializer;
-        this.byteProcessorService = byteProcessorService;
+/*        this.byteProcessorService = byteProcessorService;*/
     }
 
     private void accept() {
         SocketChannelUtils.accept(selector, serverSocketChannel).ifPresent(client -> {
             final var clientId = client.hashCode();
             byteBuffers.put(clientId, ByteBuffer.allocate(INITIAL_BYTE_BUFFER_SIZE));
-            byteProcessorService.initializeChunk(clientId);
+/*            byteProcessorService.initializeChunk(clientId);*/
             log.info("Client {}'s been connected to server", SocketChannelUtils.getRemoteAddress(client).get());
         });
     }
@@ -93,12 +93,12 @@ public class Server {
             log.info("{} bytes've been read from {}", readBytes, SocketChannelUtils.getRemoteAddress(client).get());
             // take all bytes which has just been read from socket channel
             final byte[] receivedBytes = buffer.array();
-            byteProcessorService.getCompleteByteSets(clientId, receivedBytes)
+/*            byteProcessorService.getCompleteByteSets(clientId, receivedBytes)
                     .forEach(bytes -> serializer.readObject(bytes, Object.class)
                             .ifPresent(object -> {
                                 SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
                                 executor.acceptRequest(clientId, object);
-                            }));
+                            }));*/
         }
     }
 
