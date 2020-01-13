@@ -1,32 +1,31 @@
 package com.otus.java.coursework.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
 public class StringMessage implements Externalizable {
     private String content;
-    private int contentLength;
+    private int length;
+
+    public StringMessage(String content) {
+        this.content = content;
+        this.length = content.getBytes().length;
+    }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        this.contentLength = in.readInt();
+        this.length = in.readInt();
         this.content = (String) in.readObject();
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(contentLength);
+        out.writeInt(length);
         out.writeObject(content);
     }
 }

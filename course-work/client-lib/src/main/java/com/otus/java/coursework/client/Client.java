@@ -49,7 +49,7 @@ public class Client implements AutoCloseable {
         serializer.writeObject(message).ifPresent(bytes -> {
             final var buffer = wrap(bytes);
             write(socketChannel, buffer);
-            SocketChannelUtils.register(selector, socketChannel, OP_READ);
+/*            SocketChannelUtils.register(selector, socketChannel, OP_READ);
 
             while (true) {
                 if (SocketChannelUtils.select(selector) > 0) {
@@ -89,7 +89,7 @@ public class Client implements AutoCloseable {
                         selectedKeys.remove();
                     }
                 }
-            }
+            }*/
         });
     }
 }

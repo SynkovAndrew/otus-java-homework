@@ -10,13 +10,13 @@ import static java.util.Optional.*;
 
 @Slf4j
 public class SerializerImpl implements Serializer {
-    private Object doReadObject(final byte[] bytes) {
+    private Optional<Object> doReadObject(final byte[] bytes) {
         final var byteArrayInputStream = new ByteArrayInputStream(bytes);
         try (final var objectInputStream = new ObjectInputStream(byteArrayInputStream)) {
-            return objectInputStream.readObject();
+            return ofNullable(objectInputStream.readObject());
         } catch (IOException | ClassNotFoundException e) {
             log.info("Failed to deserialize object");
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -35,13 +35,13 @@ public class SerializerImpl implements Serializer {
 
     @Override
     public <T> Optional<T> readObject(final byte[] bytes, final Class<T> clazz) {
-        return ofNullable(doReadObject(bytes))
+        return doReadObject(bytes)
                 .map(clazz::cast);
     }
 
     @Override
     public Optional<StringMessage> readObject(final byte[] bytes) {
-        return ofNullable(doReadObject(bytes))
+        return doReadObject(bytes)
                 .map(object -> (StringMessage) object);
     }
 
