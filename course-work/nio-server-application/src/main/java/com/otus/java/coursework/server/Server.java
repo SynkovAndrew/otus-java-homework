@@ -31,7 +31,7 @@ import static java.nio.ByteBuffer.wrap;
 @Slf4j
 @Component
 public class Server {
-    private final static int INITIAL_BYTE_BUFFER_SIZE = 26;
+    private final static int INITIAL_BYTE_BUFFER_SIZE = 512;
     private final ConcurrentMap<Integer, ByteBuffer> byteBuffers;
     private final ServerRequestExecutor executor;
     private final Serializer serializer;
@@ -97,14 +97,13 @@ public class Server {
             log.info("{} connection's been closed", SocketChannelUtils.getRemoteAddress(client).get());
             byteBuffers.remove(clientId);
             SocketChannelUtils.close(client);
-        } else {
-            final byte[] bytes = ByteArrayUtils.flatMap(byteArrays);
-            serializer.readObject(bytes)
-                    .ifPresent(object -> {
-                        SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
-                        executor.acceptRequest(clientId, object);
-                    });
         }
+        final byte[] bytes = ByteArrayUtils.flatMap(byteArrays);
+        serializer.readObject(bytes)
+                .ifPresent(object -> {
+                    SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
+                    executor.acceptRequest(clientId, object);
+                });
     }
 
     private void run() {

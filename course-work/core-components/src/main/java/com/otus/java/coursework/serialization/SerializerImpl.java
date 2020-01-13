@@ -34,12 +34,6 @@ public class SerializerImpl implements Serializer {
     }
 
     @Override
-    public <T> Optional<T> readObject(final byte[] bytes, final Class<T> clazz) {
-        return doReadObject(bytes)
-                .map(clazz::cast);
-    }
-
-    @Override
     public Optional<StringMessage> readObject(final byte[] bytes) {
         return doReadObject(bytes)
                 .map(object -> (StringMessage) object);
@@ -48,10 +42,5 @@ public class SerializerImpl implements Serializer {
     @Override
     public Optional<byte[]> writeObject(final StringMessage message) {
         return doWriteObject(message);
-    }
-
-    @Override
-    public Optional<byte[]> writeObject(final Object object) {
-        return doWriteObject(object);
     }
 }
