@@ -19,6 +19,7 @@ import static com.otus.java.coursework.utils.SocketChannelUtils.openSocketChanne
 import static com.otus.java.coursework.utils.SocketChannelUtils.write;
 import static java.nio.ByteBuffer.wrap;
 import static java.nio.channels.SelectionKey.OP_READ;
+import static java.util.Arrays.copyOf;
 import static org.assertj.core.util.Lists.newArrayList;
 
 @Slf4j
@@ -38,6 +39,8 @@ public class Client implements AutoCloseable {
         this.serializer = serializer;
         this.selector = Selector.open();
         this.byteBuffer = ByteBuffer.allocate(16);
+
+        SocketChannelUtils.register(selector, socketChannel, OP_READ);
     }
 
     @Override
@@ -49,47 +52,42 @@ public class Client implements AutoCloseable {
         serializer.writeObject(message).ifPresent(bytes -> {
             final var buffer = wrap(bytes);
             write(socketChannel, buffer);
-/*            SocketChannelUtils.register(selector, socketChannel, OP_READ);
 
             while (true) {
-                if (SocketChannelUtils.select(selector) > 0) {
-                    final Iterator<SelectionKey> selectedKeys = selector.selectedKeys().iterator();
-                    while (selectedKeys.hasNext()) {
-                        SelectionKey key = selectedKeys.next();
-                        if (key.isReadable()) {
-                            SocketChannel socketChannel = (SocketChannel) key.channel();
-
-                            final List<byte[]> byteArrays = newArrayList();
-                            int readBytes = SocketChannelUtils.read(socketChannel, buffer);
-                            while (readBytes > 0) {
-                                buffer.flip();
-                                log.info("{} bytes've been read from {}", readBytes,
-                                        SocketChannelUtils.getRemoteAddress(socketChannel).get());
-                                final byte[] receivedBytes = buffer.array();
-                                byteArrays.add(receivedBytes);
-                                buffer.flip();
-                                buffer.clear();
-                                readBytes = SocketChannelUtils.read(socketChannel, buffer);
-                            }
-                            if (readBytes == -1) {
+                SocketChannelUtils.select(selector);
+                final Iterator<SelectionKey> selectedKeys = selector.selectedKeys().iterator();
+                while (selectedKeys.hasNext()) {
+                    SelectionKey key = selectedKeys.next();
+                    if (key.isReadable()) {
+                        SocketChannel socketChannel = (SocketChannel) key.channel();
+                        final List<byte[]> byteArrays = newArrayList();
+                        int readBytes = SocketChannelUtils.read(socketChannel, byteBuffer);
+                        while (readBytes > 0) {
+                            byteBuffer.flip();
+                            log.info("{} bytes've been read from {}", readBytes,
+                                    SocketChannelUtils.getRemoteAddress(socketChannel).get());
+                            final byte[] receivedBytes = byteBuffer.array();
+                            byteArrays.add(copyOf(receivedBytes, receivedBytes.length));
+                            byteBuffer.flip();
+                            byteBuffer.clear();
+                            readBytes = SocketChannelUtils.read(socketChannel, byteBuffer);
+                        }
+                        final byte[] concatBytes = ByteArrayUtils.flatMap(byteArrays);
+                        serializer.readObject(concatBytes)
+                                .ifPresent(stringMessage ->
+                                        log.info("Response from server's been received: {}", stringMessage));
+    /*                        if (readBytes == -1) {
                                 // in case of result is equal to -1 the connection's closed from client side
                                 log.info("{} connection's been closed",
                                         SocketChannelUtils.getRemoteAddress(socketChannel).get());
                                 SocketChannelUtils.close(socketChannel);
-                            }
-
-                            final byte[] concatBytes = ByteArrayUtils.flatMap(byteArrays);
-                            serializer.readObject(concatBytes)
-                                    .ifPresent(stringMessage -> {
-                                        //SocketChannelUtils.register(selector, socketChannel, SelectionKey.OP_WRITE);
-                                        log.info("Response from server's been received: {}", stringMessage);
-                                    });
-                            return;
-                        }
-                        selectedKeys.remove();
+                            }*/
+                        return;
                     }
+                    selectedKeys.remove();
                 }
-            }*/
+                return;
+            }
         });
     }
 }
