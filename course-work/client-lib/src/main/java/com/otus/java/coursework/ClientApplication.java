@@ -12,7 +12,7 @@ import java.io.IOException;
 public class ClientApplication {
     public static void main(String[] args) {
         try (final var client = new Client("localhost", 4455, new SerializerImpl())) {
-            for (int i = 1; i < 2; i++) {
+            for (int i = 1; i < 100; i++) {
                 final String content = "Test " + i;
                 final StringMessage message = new StringMessage(content);
                 client.send(message);

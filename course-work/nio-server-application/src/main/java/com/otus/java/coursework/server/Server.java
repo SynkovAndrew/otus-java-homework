@@ -12,12 +12,14 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -27,11 +29,12 @@ import java.util.concurrent.ExecutorService;
 
 import static de.flapdoodle.embed.process.collections.Collections.newArrayList;
 import static java.nio.ByteBuffer.wrap;
+import static java.util.Arrays.*;
 
 @Slf4j
 @Component
 public class Server {
-    private final static int INITIAL_BYTE_BUFFER_SIZE = 512;
+    private final static int INITIAL_BYTE_BUFFER_SIZE = 16;
     private final ConcurrentMap<Integer, ByteBuffer> byteBuffers;
     private final ServerRequestExecutor executor;
     private final Serializer serializer;
@@ -87,16 +90,10 @@ public class Server {
             buffer.flip();
             log.info("{} bytes've been read from {}", readBytes, SocketChannelUtils.getRemoteAddress(client).get());
             final byte[] receivedBytes = buffer.array();
-            byteArrays.add(receivedBytes);
+            byteArrays.add(copyOf(receivedBytes, receivedBytes.length));
             buffer.flip();
             buffer.clear();
             readBytes = SocketChannelUtils.read(client, buffer);
-        }
-        if (readBytes == -1) {
-            // in case of result is equal to -1 the connection's closed from client side
-            log.info("{} connection's been closed", SocketChannelUtils.getRemoteAddress(client).get());
-            byteBuffers.remove(clientId);
-            SocketChannelUtils.close(client);
         }
         final byte[] bytes = ByteArrayUtils.flatMap(byteArrays);
         serializer.readObject(bytes)
@@ -104,6 +101,12 @@ public class Server {
                     SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
                     executor.acceptRequest(clientId, object);
                 });
+/*        if (readBytes == -1) {
+            // in case of result is equal to -1 the connection's closed from client side
+            log.info("{} connection's been closed", SocketChannelUtils.getRemoteAddress(client).get());
+            byteBuffers.remove(clientId);
+            SocketChannelUtils.close(client);
+        }*/
     }
 
     private void run() {

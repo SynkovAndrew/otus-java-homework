@@ -1,5 +1,6 @@
 package com.otus.java.coursework.dto;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,8 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class StringMessage implements Externalizable {
     private String content;

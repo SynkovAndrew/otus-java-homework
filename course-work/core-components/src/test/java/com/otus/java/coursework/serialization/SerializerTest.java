@@ -31,7 +31,7 @@ public class SerializerTest {
         final StringMessage message = new StringMessage("This is really long message. " +
                 "Much more longer then you have ever read");
         final byte[] messageBytes = serializer.writeObject(message).get();
-        final List<byte[]> parts = ByteArrayUtils.parts(messageBytes, 16);
+        final List<byte[]> parts = ByteArrayUtils.parts(messageBytes, 4);
         final byte[] bytes = ByteArrayUtils.flatMap(parts);
         final StringMessage result = serializer.readObject(bytes).get();
         assertThat(result).isNotNull();
