@@ -19,6 +19,7 @@ import static com.otus.java.coursework.utils.SocketChannelUtils.openSocketChanne
 import static com.otus.java.coursework.utils.SocketChannelUtils.write;
 import static java.nio.ByteBuffer.wrap;
 import static java.nio.channels.SelectionKey.OP_READ;
+import static java.nio.channels.SelectionKey.OP_WRITE;
 import static java.util.Arrays.copyOf;
 import static org.assertj.core.util.Lists.newArrayList;
 
@@ -39,8 +40,6 @@ public class Client implements AutoCloseable {
         this.serializer = serializer;
         this.selector = Selector.open();
         this.byteBuffer = ByteBuffer.allocate(16);
-
-        SocketChannelUtils.register(selector, socketChannel, OP_READ);
     }
 
     @Override
@@ -52,7 +51,7 @@ public class Client implements AutoCloseable {
         serializer.writeObject(message).ifPresent(bytes -> {
             final var buffer = wrap(bytes);
             write(socketChannel, buffer);
-
+            SocketChannelUtils.register(selector, socketChannel, OP_READ);
             while (true) {
                 SocketChannelUtils.select(selector);
                 final Iterator<SelectionKey> selectedKeys = selector.selectedKeys().iterator();

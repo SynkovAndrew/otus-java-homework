@@ -2,7 +2,6 @@ package com.otus.java.coursework.server;
 
 import com.otus.java.coursework.executor.ServerRequestExecutor;
 import com.otus.java.coursework.serialization.Serializer;
-import com.otus.java.coursework.service.ByteProcessorService;
 import com.otus.java.coursework.utils.ByteArrayUtils;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -12,14 +11,12 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +26,7 @@ import java.util.concurrent.ExecutorService;
 
 import static de.flapdoodle.embed.process.collections.Collections.newArrayList;
 import static java.nio.ByteBuffer.wrap;
-import static java.util.Arrays.*;
+import static java.util.Arrays.copyOf;
 
 @Slf4j
 @Component
@@ -133,7 +130,7 @@ public class Server {
         executor.getResponse(client.hashCode())
                 .flatMap(serializer::writeObject)
                 .ifPresent(bytes -> {
-                    final ByteBuffer buffer = byteBuffers.get(client.hashCode());
+/*                    final ByteBuffer buffer = byteBuffers.get(client.hashCode());
                     for (byte[] part : ByteArrayUtils.parts(bytes, INITIAL_BYTE_BUFFER_SIZE)) {
                         buffer.clear();
                         buffer.put(wrap(part));
@@ -143,9 +140,12 @@ public class Server {
                                 writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
                         if (!buffer.hasRemaining()) {
                             buffer.compact();
-                            SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
                         }
-                    }
+                    }*/
+                    final int writtenBytes = SocketChannelUtils.write(client, wrap(bytes));
+                    log.info("{} bytes've been written to {}",
+                            writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
+                    SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
                 });
     }
 }
