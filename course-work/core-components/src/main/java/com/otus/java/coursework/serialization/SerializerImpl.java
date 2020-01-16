@@ -1,5 +1,6 @@
 package com.otus.java.coursework.serialization;
 
+import com.otus.java.coursework.dto.ByteMessage;
 import com.otus.java.coursework.dto.StringMessage;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,13 +35,34 @@ public class SerializerImpl implements Serializer {
     }
 
     @Override
-    public Optional<StringMessage> readObject(final byte[] bytes) {
+    public Optional<StringMessage> readStringMessage(final byte[] bytes) {
         return doReadObject(bytes)
                 .map(object -> (StringMessage) object);
     }
 
     @Override
-    public Optional<byte[]> writeObject(final StringMessage message) {
+    public Optional<Object> readObject(final byte[] bytes) {
+        return doReadObject(bytes);
+    }
+
+    @Override
+    public Optional<ByteMessage> readByteMessage(final byte[] bytes) {
+        return doReadObject(bytes)
+                .map(object -> (ByteMessage) object);
+    }
+
+    @Override
+    public Optional<byte[]> writeStringMessage(final StringMessage message) {
+        return doWriteObject(message);
+    }
+
+    @Override
+    public Optional<byte[]> writeObject(final Object object) {
+        return doWriteObject(object);
+    }
+
+    @Override
+    public Optional<byte[]> writeByteMessage(final ByteMessage message) {
         return doWriteObject(message);
     }
 }

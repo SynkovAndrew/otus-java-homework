@@ -1,6 +1,5 @@
 package com.otus.java.coursework.executor;
 
-import com.otus.java.coursework.dto.StringMessage;
 import com.otus.java.coursework.service.UserDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +20,7 @@ public class DatabaseServerRequestExecutor extends AbstractServerRequestExecutor
     }
 
     @Override
-    public void acceptRequest(final int clientId, final StringMessage dto) {
+    public void acceptRequest(final int clientId, final Object dto) {
       /*  if (dto instanceof CreateUserRequestDTO) {
             executeRequest(clientId, () -> {
                 log.info("Processing request {} from client {}...", dto, clientId);

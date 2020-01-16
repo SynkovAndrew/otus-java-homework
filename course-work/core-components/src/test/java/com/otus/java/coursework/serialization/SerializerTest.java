@@ -20,8 +20,8 @@ public class SerializerTest {
     @Test
     public void serializeDeserializeMessage() {
         final StringMessage message = new StringMessage("First");
-        final byte[] messageBytes = serializer.writeObject(message).get();
-        final StringMessage firstResult = serializer.readObject(messageBytes).get();
+        final byte[] messageBytes = serializer.writeStringMessage(message).get();
+        final StringMessage firstResult = serializer.readStringMessage(messageBytes).get();
         assertThat(firstResult).isNotNull();
         assertThat(firstResult.getContent()).isEqualTo("First");
     }
@@ -30,10 +30,10 @@ public class SerializerTest {
     public void serializeDeserializeMessagePartially() {
         final StringMessage message = new StringMessage("This is really long message. " +
                 "Much more longer then you have ever read");
-        final byte[] messageBytes = serializer.writeObject(message).get();
+        final byte[] messageBytes = serializer.writeStringMessage(message).get();
         final List<byte[]> parts = ByteArrayUtils.parts(messageBytes, 4);
         final byte[] bytes = ByteArrayUtils.flatMap(parts);
-        final StringMessage result = serializer.readObject(bytes).get();
+        final StringMessage result = serializer.readStringMessage(bytes).get();
         assertThat(result).isNotNull();
         assertThat(result.getContent()).isEqualTo("This is really long message. " +
                 "Much more longer then you have ever read");

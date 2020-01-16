@@ -1,5 +1,6 @@
 package com.otus.java.coursework.client;
 
+import com.otus.java.coursework.dto.ByteMessage;
 import com.otus.java.coursework.dto.StringMessage;
 import com.otus.java.coursework.exception.FailedToCreateClientException;
 import com.otus.java.coursework.serialization.Serializer;
@@ -19,7 +20,6 @@ import static com.otus.java.coursework.utils.SocketChannelUtils.openSocketChanne
 import static com.otus.java.coursework.utils.SocketChannelUtils.write;
 import static java.nio.ByteBuffer.wrap;
 import static java.nio.channels.SelectionKey.OP_READ;
-import static java.nio.channels.SelectionKey.OP_WRITE;
 import static java.util.Arrays.copyOf;
 import static org.assertj.core.util.Lists.newArrayList;
 
@@ -47,8 +47,8 @@ public class Client implements AutoCloseable {
         SocketChannelUtils.close(socketChannel);
     }
 
-    public void send(final StringMessage message) {
-        serializer.writeObject(message).ifPresent(bytes -> {
+    public void send(final Object object) {
+        serializer.writeObject(object).ifPresent(bytes -> {
             final var buffer = wrap(bytes);
             write(socketChannel, buffer);
             SocketChannelUtils.register(selector, socketChannel, OP_READ);
@@ -73,8 +73,14 @@ public class Client implements AutoCloseable {
                         }
                         final byte[] concatBytes = ByteArrayUtils.flatMap(byteArrays);
                         serializer.readObject(concatBytes)
-                                .ifPresent(stringMessage ->
-                                        log.info("Response from server's been received: {}", stringMessage));
+                                .ifPresent(readObject -> {
+                                    if (readObject instanceof ByteMessage) {
+                                        final String text = new String(((ByteMessage) readObject).getContent());
+                                        log.info("Response from server's been received: {}", text);
+                                    } else {
+                                        log.info("Response from server's been received: {}", readObject);
+                                    }
+                                });
     /*                        if (readBytes == -1) {
                                 // in case of result is equal to -1 the connection's closed from client side
                                 log.info("{} connection's been closed",

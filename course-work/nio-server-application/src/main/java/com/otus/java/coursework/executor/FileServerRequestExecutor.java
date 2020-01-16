@@ -1,6 +1,5 @@
 package com.otus.java.coursework.executor;
 
-import com.otus.java.coursework.dto.StringMessage;
 import com.otus.java.coursework.service.FileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,7 @@ public class FileServerRequestExecutor extends AbstractServerRequestExecutor imp
     }
 
     @Override
-    public void acceptRequest(final int clientId, final StringMessage object) {
+    public void acceptRequest(final int clientId, final Object object) {
         executeRequest(clientId, () -> {
             log.info("Writing data {} from client {} to file...", object, clientId);
             fileService.writeToFile(fileName, object);

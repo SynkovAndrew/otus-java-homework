@@ -1,6 +1,7 @@
 package com.otus.java.coursework;
 
 import com.otus.java.coursework.client.Client;
+import com.otus.java.coursework.dto.ByteMessage;
 import com.otus.java.coursework.dto.StringMessage;
 import com.otus.java.coursework.exception.FailedToCreateClientException;
 import com.otus.java.coursework.serialization.SerializerImpl;
@@ -14,7 +15,7 @@ public class ClientApplication {
         try (final var client = new Client("localhost", 4455, new SerializerImpl())) {
             for (int i = 1; i < 100; i++) {
                 final String content = "Test " + i;
-                final StringMessage message = new StringMessage(content);
+                final ByteMessage message = new ByteMessage(content.getBytes());
                 client.send(message);
                 Thread.sleep(3000);
             }

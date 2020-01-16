@@ -1,6 +1,5 @@
 package com.otus.java.coursework.executor;
 
-import com.otus.java.coursework.dto.StringMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,7 +15,7 @@ public class ConsoleServerRequestExecutor extends AbstractServerRequestExecutor 
     }
 
     @Override
-    public void acceptRequest(final int clientId, final StringMessage object) {
+    public void acceptRequest(final int clientId, final Object object) {
         executeRequest(clientId, () -> {
             log.info("---> Data {} from client {} has been received", object, clientId);
             return object;
