@@ -127,7 +127,8 @@ public class Server {
 
     private void write(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
-        executor.getResponse(client.hashCode())
+        final int clientId = client.hashCode();
+        executor.getResponse(clientId)
                 .flatMap(serializer::writeObject)
                 .ifPresent(bytes -> {
 /*                    final ByteBuffer buffer = byteBuffers.get(client.hashCode());
@@ -146,6 +147,7 @@ public class Server {
                     log.info("{} bytes've been written to {}",
                             writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
                     SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
+                    executor.removeResponse(clientId);
                 });
     }
 }

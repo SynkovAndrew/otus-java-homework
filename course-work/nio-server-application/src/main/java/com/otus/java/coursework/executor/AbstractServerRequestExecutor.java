@@ -31,4 +31,8 @@ public abstract class AbstractServerRequestExecutor {
     public Optional<StringMessage> getResponse(final int clientId) {
         return ofNullable(responses.get(clientId));
     }
+
+    public void removeResponse(final int clientId) {
+        responses.computeIfPresent(clientId, (key, value) -> responses.remove(clientId));
+    }
 }

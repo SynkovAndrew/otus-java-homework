@@ -8,4 +8,6 @@ public interface ServerRequestExecutor {
     void acceptRequest(int clientId, StringMessage object);
 
     Optional<StringMessage> getResponse(final int clientId);
+
+    void removeResponse(int clientId);
 }
