@@ -15,13 +15,11 @@ import java.util.Optional;
 
 import static com.otus.java.coursework.utils.ByteArrayUtils.flatMap;
 import static java.util.Arrays.copyOf;
-import static java.util.Optional.empty;
-import static java.util.Optional.ofNullable;
+import static java.util.Optional.*;
 import static org.assertj.core.util.Lists.newArrayList;
 
 @Slf4j
 public class SocketChannelUtils {
-
     public static Optional<SocketChannel> accept(final Selector selector,
                                                  final ServerSocketChannel serverSocketChannel) {
         try {
@@ -111,8 +109,8 @@ public class SocketChannelUtils {
         }
     }
 
-    public static byte[] readStepByStep(final SocketChannel socketChannel,
-                                        final ByteBuffer buffer) {
+    public static Optional<byte[]> readStepByStep(final SocketChannel socketChannel,
+                                                  final ByteBuffer buffer) {
         final List<byte[]> byteArrays = newArrayList();
         int readBytes = read(socketChannel, buffer);
         while (readBytes > 0) {
@@ -124,6 +122,11 @@ public class SocketChannelUtils {
             buffer.clear();
             readBytes = read(socketChannel, buffer);
         }
-        return flatMap(byteArrays);
+        if (readBytes == -1) {
+            log.info("{} connection's been closed", getRemoteAddress(socketChannel).get());
+            close(socketChannel);
+            return empty();
+        }
+        return of(flatMap(byteArrays));
     }
 }

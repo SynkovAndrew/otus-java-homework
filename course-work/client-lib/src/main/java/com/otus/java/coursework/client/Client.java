@@ -22,7 +22,7 @@ public class Client implements AutoCloseable {
     private final Serializer serializer;
     private final SocketChannel socketChannel;
     private final Selector selector;
-    private final ByteBuffer byteBuffer;
+    private final ByteBuffer buffer;
 
     public Client(final String host,
                   final int port,
@@ -32,7 +32,7 @@ public class Client implements AutoCloseable {
         this.socketChannel.configureBlocking(false);
         this.serializer = serializer;
         this.selector = Selector.open();
-        this.byteBuffer = ByteBuffer.allocate(16);
+        this.buffer = ByteBuffer.allocate(16);
     }
 
     @Override
@@ -50,9 +50,9 @@ public class Client implements AutoCloseable {
                 while (selectedKeys.hasNext()) {
                     SelectionKey key = selectedKeys.next();
                     if (key.isReadable()) {
-                        SocketChannel socketChannel = (SocketChannel) key.channel();
-                        final byte[] readBytes = readStepByStep(socketChannel, byteBuffer);
-                        serializer.readObject(readBytes)
+                        SocketChannel client = (SocketChannel) key.channel();
+                        readStepByStep(client, buffer)
+                                .flatMap(serializer::readObject)
                                 .ifPresent(readObject -> {
                                     if (readObject instanceof ByteMessage) {
                                         final String text = new String(((ByteMessage) readObject).getContent());
@@ -61,12 +61,6 @@ public class Client implements AutoCloseable {
                                         log.info("Response from server's been received: {}", readObject);
                                     }
                                 });
-    /*                        if (readBytes == -1) {
-                                // in case of result is equal to -1 the connection's closed from client side
-                                log.info("{} connection's been closed",
-                                        SocketChannelUtils.getRemoteAddress(socketChannel).get());
-                                SocketChannelUtils.close(socketChannel);
-                            }*/
                         return;
                     }
                     selectedKeys.remove();

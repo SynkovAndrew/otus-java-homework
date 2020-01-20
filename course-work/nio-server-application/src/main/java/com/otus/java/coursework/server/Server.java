@@ -79,18 +79,12 @@ public class Server {
         final SocketChannel client = (SocketChannel) key.channel();
         final int clientId = client.hashCode();
         final ByteBuffer buffer = byteBuffers.get(clientId);
-        final byte[] readBytes = readStepByStep(client, buffer);
-        serializer.readObject(readBytes)
+        readStepByStep(client, buffer)
+                .flatMap(serializer::readObject)
                 .ifPresent(object -> {
                     register(selector, client, OP_WRITE);
                     executor.acceptRequest(clientId, object);
                 });
-/*        if (readBytes == -1) {
-            // in case of result is equal to -1 the connection's closed from client side
-            log.info("{} connection's been closed", SocketChannelUtils.getRemoteAddress(client).get());
-            byteBuffers.remove(clientId);
-            SocketChannelUtils.close(client);
-        }*/
     }
 
     private void run() {
@@ -119,8 +113,7 @@ public class Server {
                 .flatMap(serializer::writeObject)
                 .ifPresent(bytes -> {
                     final int writtenBytes = write(client, wrap(bytes));
-                    log.info("{} bytes've been written to {}",
-                            writtenBytes, getRemoteAddress(client).get());
+                    log.info("{} bytes've been written to {}", writtenBytes, getRemoteAddress(client).get());
                     register(selector, client, OP_READ);
                     executor.removeResponse(clientId);
                 });
