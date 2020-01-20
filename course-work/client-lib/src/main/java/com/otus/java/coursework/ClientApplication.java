@@ -21,16 +21,19 @@ public class ClientApplication {
                     for (int i = 1; i < 5; i++) {
                         final CreateUserRequestDTO request = CreateUserRequestDTO.builder()
                                 .age(i)
-                                .firstName("aaa")
-                                .lastName("bbb")
+                                .name("aaa")
                                 .build();
                         client.send(request);
                     }
                 } catch (FailedToCreateClientException | IOException e) {
                     log.error("Failed o create client", e);
-                } /*catch (InterruptedException ignored) {
-                }*/
+                }
             });
         }
+/*        try (final var client = new Client("localhost", 4455, new SerializerImpl())) {
+            client.send(FindUsersRequestDTO.builder().build());
+        } catch (FailedToCreateClientException | IOException e) {
+            log.error("Failed o create client", e);
+        }*/
     }
 }

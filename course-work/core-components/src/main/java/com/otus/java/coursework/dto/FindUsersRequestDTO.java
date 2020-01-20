@@ -11,7 +11,6 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateUserRequestDTO implements Serializable {
+public class FindUsersRequestDTO implements Serializable {
     private String name;
-    private Integer age;
 }

@@ -12,8 +12,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO implements Serializable {
-    private Integer userId;
-    private String firstName;
-    private String lastName;
+    private Long userId;
+    private String name;
     private Integer age;
 }

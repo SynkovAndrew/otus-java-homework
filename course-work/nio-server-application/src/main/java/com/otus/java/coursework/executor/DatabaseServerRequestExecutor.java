@@ -1,13 +1,14 @@
 package com.otus.java.coursework.executor;
 
-import com.otus.java.coursework.dto.ByteMessage;
-import com.otus.java.coursework.dto.CreateUserRequestDTO;
+import com.otus.java.coursework.dto.*;
 import com.otus.java.coursework.serialization.Serializer;
 import com.otus.java.coursework.service.UserDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+
+import static java.util.Objects.nonNull;
 
 @Slf4j
 @Service
@@ -25,15 +26,26 @@ public class DatabaseServerRequestExecutor extends AbstractServerRequestExecutor
 
     @Override
     public void acceptRequest(final int clientId, final Object object) {
-        executeRequest(clientId, () -> {
-            serializer.readObject(((ByteMessage) object).getContent())
-                    .ifPresent(content -> {
-                        if (content instanceof CreateUserRequestDTO) {
-                            log.info("Processing request {} from client {}...", content, clientId);
-                            dbService.create(content);
-                        }
-                    });
-            return object;
-        });
+        executeRequest(clientId, () -> serializer.readObject(((ByteMessage) object).getContent())
+                .map(content -> {
+                    if (content instanceof CreateUserRequestDTO) {
+                        log.info("Processing request {} from client {}...", content, clientId);
+                        final UserDTO user = dbService.create((CreateUserRequestDTO) content);
+                        final ByteMessage byteMessage = serializer.writeObject(user)
+                                .map(ByteMessage::new)
+                                .orElse(null);
+                        return nonNull(byteMessage) ? byteMessage : object;
+                    } else if (content instanceof FindUsersRequestDTO) {
+                        final FindUsersResponseDTO response = FindUsersResponseDTO.builder()
+                                .content(dbService.findAll())
+                                .build();
+                        final ByteMessage byteMessage = serializer.writeObject(response)
+                                .map(ByteMessage::new)
+                                .orElse(null);
+                        return nonNull(byteMessage) ? byteMessage : object;
+                    }
+                    return object;
+                })
+                .orElse(object));
     }
 }

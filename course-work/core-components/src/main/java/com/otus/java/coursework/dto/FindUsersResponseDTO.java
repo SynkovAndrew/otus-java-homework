@@ -6,12 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateUserRequestDTO implements Serializable {
-    private String name;
-    private Integer age;
+public class FindUsersResponseDTO implements Serializable {
+    private List<UserDTO> content;
 }
