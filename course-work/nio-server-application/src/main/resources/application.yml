@@ -12,3 +12,6 @@ server.action.executor.thread.pool.size: 10
 file.server.action.executor.file.name: output.txt
 file.server.action.executor.folder.name: ./course-work/nio-server-application/src/main/resources/
 
+logging:
+  level:
+    root: INFO

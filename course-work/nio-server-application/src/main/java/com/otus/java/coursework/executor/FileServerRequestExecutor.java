@@ -1,5 +1,6 @@
 package com.otus.java.coursework.executor;
 
+import com.otus.java.coursework.serialization.Serializer;
 import com.otus.java.coursework.service.FileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,8 +17,9 @@ public class FileServerRequestExecutor extends AbstractServerRequestExecutor imp
     public FileServerRequestExecutor(
             final FileService fileService,
             final @Value("${server.action.executor.thread.pool.size:10}") int threadPoolSize,
-            final @Value("${file.server.action.executor.file.name:output.txt}") String fileName) {
-        super(threadPoolSize);
+            final @Value("${file.server.action.executor.file.name:output.txt}") String fileName,
+            final Serializer serializer) {
+        super(threadPoolSize, serializer);
         this.fileService = fileService;
         this.fileName = fileName;
     }

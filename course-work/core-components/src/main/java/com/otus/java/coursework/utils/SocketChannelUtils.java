@@ -114,7 +114,7 @@ public class SocketChannelUtils {
         int readBytes = read(socketChannel, buffer);
         while (readBytes > 0) {
             buffer.flip();
-            log.info("{} bytes've been read from {}", readBytes, getRemoteAddress(socketChannel));
+            log.debug("{} bytes've been read from {}", readBytes, getRemoteAddress(socketChannel));
             final byte[] receivedBytes = buffer.array();
             byteArrays.add(copyOf(receivedBytes, receivedBytes.length));
             buffer.flip();

@@ -1,5 +1,6 @@
 package com.otus.java.coursework.executor;
 
+import com.otus.java.coursework.serialization.Serializer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -14,12 +15,14 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
 
 @Slf4j
 public abstract class AbstractServerRequestExecutor {
+    protected final Serializer serializer;
     private final ExecutorService executorService;
     private final Map<Integer, Object> responses;
 
-    protected AbstractServerRequestExecutor(final int threadPoolSize) {
+    protected AbstractServerRequestExecutor(final int threadPoolSize, final Serializer serializer) {
         this.responses = new ConcurrentHashMap<>();
         this.executorService = newFixedThreadPool(threadPoolSize);
+        this.serializer = serializer;
     }
 
     void executeRequest(final int clientId, final Supplier<Object> supplier) {

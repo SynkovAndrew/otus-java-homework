@@ -1,5 +1,8 @@
 package com.otus.java.coursework.executor;
 
+import com.otus.java.coursework.dto.ByteMessage;
+import com.otus.java.coursework.dto.CreateUserRequestDTO;
+import com.otus.java.coursework.serialization.Serializer;
 import com.otus.java.coursework.service.UserDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,18 +17,23 @@ public class DatabaseServerRequestExecutor extends AbstractServerRequestExecutor
 
     public DatabaseServerRequestExecutor(
             final UserDBService dbService,
-            final @Value("${server.action.executor.thread.pool.size:10}") int threadPoolSize) {
-        super(threadPoolSize);
+            final @Value("${server.action.executor.thread.pool.size:10}") int threadPoolSize,
+            final Serializer serializer) {
+        super(threadPoolSize, serializer);
         this.dbService = dbService;
     }
 
     @Override
-    public void acceptRequest(final int clientId, final Object dto) {
-      /*  if (dto instanceof CreateUserRequestDTO) {
-            executeRequest(clientId, () -> {
-                log.info("Processing request {} from client {}...", dto, clientId);
-                return dbService.create((CreateUserRequestDTO) dto);
-            });
-        }*/
+    public void acceptRequest(final int clientId, final Object object) {
+        executeRequest(clientId, () -> {
+            serializer.readObject(((ByteMessage) object).getContent())
+                    .ifPresent(content -> {
+                        if (content instanceof CreateUserRequestDTO) {
+                            log.info("Processing request {} from client {}...", content, clientId);
+                            dbService.create(content);
+                        }
+                    });
+            return object;
+        });
     }
 }

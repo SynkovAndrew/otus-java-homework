@@ -57,13 +57,8 @@ public class Client implements AutoCloseable {
                                 readStepByStep(client, buffer)
                                         .flatMap(serializer::readObject)
                                         .ifPresent(readObject -> {
-                                            if (readObject instanceof ByteMessage) {
-                                                //final String text = new String(((ByteMessage) readObject).getContent());
-                                                final Object o = serializer.readObject(((ByteMessage) readObject).getContent()).get();
-                                                log.info("Response from server's been received: {}", o);
-                                            } else {
-                                                log.info("Response from server's been received: {}", readObject);
-                                            }
+                                            final Object o = serializer.readObject(((ByteMessage) readObject).getContent()).get();
+                                            log.info("Response from server's been received: {}", o);
                                         });
                                 return;
                             }

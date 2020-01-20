@@ -113,7 +113,7 @@ public class Server {
                 .flatMap(serializer::writeObject)
                 .ifPresent(bytes -> {
                     final int writtenBytes = write(client, wrap(bytes));
-                    log.info("{} bytes've been written to {}", writtenBytes, getRemoteAddress(client));
+                    log.debug("{} bytes've been written to {}", writtenBytes, getRemoteAddress(client));
                     register(selector, client, OP_READ);
                     executor.removeResponse(clientId);
                 });
