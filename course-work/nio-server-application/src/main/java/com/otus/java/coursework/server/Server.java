@@ -55,7 +55,7 @@ public class Server {
         accept(selector, serverSocketChannel).ifPresent(client -> {
             final var clientId = client.hashCode();
             byteBuffers.put(clientId, allocate(INITIAL_BYTE_BUFFER_SIZE));
-            log.info("Client {}'s been connected to server", getRemoteAddress(client).get());
+            log.info("Client {}'s been connected to server", getRemoteAddress(client));
         });
     }
 
@@ -113,7 +113,7 @@ public class Server {
                 .flatMap(serializer::writeObject)
                 .ifPresent(bytes -> {
                     final int writtenBytes = write(client, wrap(bytes));
-                    log.info("{} bytes've been written to {}", writtenBytes, getRemoteAddress(client).get());
+                    log.info("{} bytes've been written to {}", writtenBytes, getRemoteAddress(client));
                     register(selector, client, OP_READ);
                     executor.removeResponse(clientId);
                 });

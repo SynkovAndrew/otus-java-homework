@@ -41,32 +41,36 @@ public class Client implements AutoCloseable {
     }
 
     public void send(final Object object) {
-        serializer.writeObject(object).ifPresent(bytes -> {
-            write(socketChannel, wrap(bytes));
-            register(selector, socketChannel, OP_READ);
-            while (true) {
-                select(selector);
-                final Iterator<SelectionKey> selectedKeys = selector.selectedKeys().iterator();
-                while (selectedKeys.hasNext()) {
-                    SelectionKey key = selectedKeys.next();
-                    if (key.isReadable()) {
-                        SocketChannel client = (SocketChannel) key.channel();
-                        readStepByStep(client, buffer)
-                                .flatMap(serializer::readObject)
-                                .ifPresent(readObject -> {
-                                    if (readObject instanceof ByteMessage) {
-                                        final String text = new String(((ByteMessage) readObject).getContent());
-                                        log.info("Response from server's been received: {}", text);
-                                    } else {
-                                        log.info("Response from server's been received: {}", readObject);
-                                    }
-                                });
+        serializer.writeObject(object)
+                .map(ByteMessage::new)
+                .flatMap(serializer::writeObject)
+                .ifPresent(bytes -> {
+                    write(socketChannel, wrap(bytes));
+                    register(selector, socketChannel, OP_READ);
+                    while (true) {
+                        select(selector);
+                        final Iterator<SelectionKey> selectedKeys = selector.selectedKeys().iterator();
+                        while (selectedKeys.hasNext()) {
+                            SelectionKey key = selectedKeys.next();
+                            if (key.isReadable()) {
+                                SocketChannel client = (SocketChannel) key.channel();
+                                readStepByStep(client, buffer)
+                                        .flatMap(serializer::readObject)
+                                        .ifPresent(readObject -> {
+                                            if (readObject instanceof ByteMessage) {
+                                                //final String text = new String(((ByteMessage) readObject).getContent());
+                                                final Object o = serializer.readObject(((ByteMessage) readObject).getContent()).get();
+                                                log.info("Response from server's been received: {}", o);
+                                            } else {
+                                                log.info("Response from server's been received: {}", readObject);
+                                            }
+                                        });
+                                return;
+                            }
+                            selectedKeys.remove();
+                        }
                         return;
                     }
-                    selectedKeys.remove();
-                }
-                return;
-            }
-        });
+                });
     }
 }

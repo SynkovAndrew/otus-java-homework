@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -51,12 +50,12 @@ public class SocketChannelUtils {
         }
     }
 
-    public static Optional<SocketAddress> getRemoteAddress(final SocketChannel socketChannel) {
+    public static String getRemoteAddress(final SocketChannel socketChannel) {
         try {
-            return ofNullable(socketChannel.getRemoteAddress());
+            return socketChannel.getRemoteAddress().toString();
         } catch (IOException e) {
             log.info("Failed to get remote address from socket channel", e);
-            return empty();
+            return "unknown address";
         }
     }
 
@@ -115,7 +114,7 @@ public class SocketChannelUtils {
         int readBytes = read(socketChannel, buffer);
         while (readBytes > 0) {
             buffer.flip();
-            log.info("{} bytes've been read from {}", readBytes, getRemoteAddress(socketChannel).get());
+            log.info("{} bytes've been read from {}", readBytes, getRemoteAddress(socketChannel));
             final byte[] receivedBytes = buffer.array();
             byteArrays.add(copyOf(receivedBytes, receivedBytes.length));
             buffer.flip();
@@ -123,7 +122,7 @@ public class SocketChannelUtils {
             readBytes = read(socketChannel, buffer);
         }
         if (readBytes == -1) {
-            log.info("{} connection's been closed", getRemoteAddress(socketChannel).get());
+            log.info("{} connection's been closed", getRemoteAddress(socketChannel));
             close(socketChannel);
             return empty();
         }
