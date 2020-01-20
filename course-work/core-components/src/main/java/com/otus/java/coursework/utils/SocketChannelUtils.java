@@ -10,10 +10,14 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.List;
 import java.util.Optional;
 
+import static com.otus.java.coursework.utils.ByteArrayUtils.flatMap;
+import static java.util.Arrays.copyOf;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
+import static org.assertj.core.util.Lists.newArrayList;
 
 @Slf4j
 public class SocketChannelUtils {
@@ -105,5 +109,21 @@ public class SocketChannelUtils {
             log.info("Failed to write to socket channel", e);
             return 0;
         }
+    }
+
+    public static byte[] readStepByStep(final SocketChannel socketChannel,
+                                        final ByteBuffer buffer) {
+        final List<byte[]> byteArrays = newArrayList();
+        int readBytes = read(socketChannel, buffer);
+        while (readBytes > 0) {
+            buffer.flip();
+            log.info("{} bytes've been read from {}", readBytes, getRemoteAddress(socketChannel).get());
+            final byte[] receivedBytes = buffer.array();
+            byteArrays.add(copyOf(receivedBytes, receivedBytes.length));
+            buffer.flip();
+            buffer.clear();
+            readBytes = read(socketChannel, buffer);
+        }
+        return flatMap(byteArrays);
     }
 }

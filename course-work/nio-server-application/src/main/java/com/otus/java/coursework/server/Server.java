@@ -2,7 +2,6 @@ package com.otus.java.coursework.server;
 
 import com.otus.java.coursework.executor.ServerRequestExecutor;
 import com.otus.java.coursework.serialization.Serializer;
-import com.otus.java.coursework.utils.ByteArrayUtils;
 import com.otus.java.coursework.utils.SocketChannelUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,15 +17,15 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
-import static de.flapdoodle.embed.process.collections.Collections.newArrayList;
+import static com.otus.java.coursework.utils.SocketChannelUtils.*;
+import static java.nio.ByteBuffer.allocate;
 import static java.nio.ByteBuffer.wrap;
-import static java.util.Arrays.copyOf;
+import static java.nio.channels.SelectionKey.*;
 
 @Slf4j
 @Component
@@ -52,11 +51,11 @@ public class Server {
         this.serializer = serializer;
     }
 
-    private void accept() {
-        SocketChannelUtils.accept(selector, serverSocketChannel).ifPresent(client -> {
+    private void handleAccept() {
+        accept(selector, serverSocketChannel).ifPresent(client -> {
             final var clientId = client.hashCode();
-            byteBuffers.put(clientId, ByteBuffer.allocate(INITIAL_BYTE_BUFFER_SIZE));
-            log.info("Client {}'s been connected to server", SocketChannelUtils.getRemoteAddress(client).get());
+            byteBuffers.put(clientId, allocate(INITIAL_BYTE_BUFFER_SIZE));
+            log.info("Client {}'s been connected to server", getRemoteAddress(client).get());
         });
     }
 
@@ -71,31 +70,19 @@ public class Server {
         serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.bind(new InetSocketAddress(host, port));
         serverSocketChannel.configureBlocking(false);
-        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        serverSocketChannel.register(selector, OP_ACCEPT);
         serverRunner.execute(this::run);
         log.info("Server's been started at {}:{}", host, port);
     }
 
-    private void read(final SelectionKey key) {
+    private void handleRead(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
         final int clientId = client.hashCode();
         final ByteBuffer buffer = byteBuffers.get(clientId);
-
-        final List<byte[]> byteArrays = newArrayList();
-        int readBytes = SocketChannelUtils.read(client, buffer);
-        while (readBytes > 0) {
-            buffer.flip();
-            log.info("{} bytes've been read from {}", readBytes, SocketChannelUtils.getRemoteAddress(client).get());
-            final byte[] receivedBytes = buffer.array();
-            byteArrays.add(copyOf(receivedBytes, receivedBytes.length));
-            buffer.flip();
-            buffer.clear();
-            readBytes = SocketChannelUtils.read(client, buffer);
-        }
-        final byte[] bytes = ByteArrayUtils.flatMap(byteArrays);
-        serializer.readObject(bytes)
+        final byte[] readBytes = readStepByStep(client, buffer);
+        serializer.readObject(readBytes)
                 .ifPresent(object -> {
-                    SocketChannelUtils.register(selector, client, SelectionKey.OP_WRITE);
+                    register(selector, client, OP_WRITE);
                     executor.acceptRequest(clientId, object);
                 });
 /*        if (readBytes == -1) {
@@ -108,45 +95,33 @@ public class Server {
 
     private void run() {
         while (true) {
-            SocketChannelUtils.select(selector); // Blocking call. The current thread will be blocked till a client connect to server.
+            select(selector); // Blocking call. The current thread will be blocked till a client connect to server.
             final Set<SelectionKey> selectedKeys = selector.selectedKeys();
             final Iterator<SelectionKey> iter = selectedKeys.iterator();
             while (iter.hasNext()) {
                 SelectionKey key = iter.next();
                 if (key.isAcceptable()) {
-                    accept();
+                    handleAccept();
                 } else if (key.isReadable()) {
-                    read(key);
+                    handleRead(key);
                 } else if (key.isWritable()) {
-                    write(key);
+                    handleWrite(key);
                 }
                 iter.remove();
             }
         }
     }
 
-    private void write(final SelectionKey key) {
+    private void handleWrite(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
         final int clientId = client.hashCode();
         executor.getResponse(clientId)
                 .flatMap(serializer::writeObject)
                 .ifPresent(bytes -> {
-/*                    final ByteBuffer buffer = byteBuffers.get(client.hashCode());
-                    for (byte[] part : ByteArrayUtils.parts(bytes, INITIAL_BYTE_BUFFER_SIZE)) {
-                        buffer.clear();
-                        buffer.put(wrap(part));
-                        buffer.flip();
-                        final int writtenBytes = SocketChannelUtils.write(client, buffer);
-                        log.info("{} bytes've been written to {}",
-                                writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
-                        if (!buffer.hasRemaining()) {
-                            buffer.compact();
-                        }
-                    }*/
-                    final int writtenBytes = SocketChannelUtils.write(client, wrap(bytes));
+                    final int writtenBytes = write(client, wrap(bytes));
                     log.info("{} bytes've been written to {}",
-                            writtenBytes, SocketChannelUtils.getRemoteAddress(client).get());
-                    SocketChannelUtils.register(selector, client, SelectionKey.OP_READ);
+                            writtenBytes, getRemoteAddress(client).get());
+                    register(selector, client, OP_READ);
                     executor.removeResponse(clientId);
                 });
     }
