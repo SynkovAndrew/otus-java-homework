@@ -1,9 +1,6 @@
 package com.otus.java.coursework.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.List;
@@ -12,6 +9,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(of = {"size"})
 public class FindUsersResponseDTO implements Serializable {
     private List<UserDTO> content;
+    private int size;
 }

@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static java.util.Objects.nonNull;
 
 @Slf4j
@@ -28,16 +30,18 @@ public class DatabaseServerRequestExecutor extends AbstractServerRequestExecutor
     public void acceptRequest(final int clientId, final Object object) {
         executeRequest(clientId, () -> serializer.readObject(((ByteMessage) object).getContent())
                 .map(content -> {
+                    log.info("Processing request {} from client {}...", content, clientId);
                     if (content instanceof CreateUserRequestDTO) {
-                        log.info("Processing request {} from client {}...", content, clientId);
                         final UserDTO user = dbService.create((CreateUserRequestDTO) content);
                         final ByteMessage byteMessage = serializer.writeObject(user)
                                 .map(ByteMessage::new)
                                 .orElse(null);
                         return nonNull(byteMessage) ? byteMessage : object;
                     } else if (content instanceof FindUsersRequestDTO) {
+                        final List<UserDTO> users = dbService.findAll();
                         final FindUsersResponseDTO response = FindUsersResponseDTO.builder()
-                                .content(dbService.findAll())
+                                .content(users)
+                                .size(users.size())
                                 .build();
                         final ByteMessage byteMessage = serializer.writeObject(response)
                                 .map(ByteMessage::new)

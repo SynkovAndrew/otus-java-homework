@@ -54,7 +54,7 @@ public class Client implements AutoCloseable {
                             SelectionKey key = selectedKeys.next();
                             if (key.isReadable()) {
                                 SocketChannel client = (SocketChannel) key.channel();
-                                readStepByStep(client, buffer)
+                                readStepByStep(client, buffer, null)
                                         .flatMap(serializer::readObject)
                                         .ifPresent(readObject -> {
                                             final Object o = serializer.readObject(((ByteMessage) readObject).getContent()).get();

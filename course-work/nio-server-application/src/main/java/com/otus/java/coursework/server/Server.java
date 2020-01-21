@@ -79,7 +79,7 @@ public class Server {
         final SocketChannel client = (SocketChannel) key.channel();
         final int clientId = client.hashCode();
         final ByteBuffer buffer = byteBuffers.get(clientId);
-        readStepByStep(client, buffer)
+        readStepByStep(client, buffer, byteBuffers)
                 .flatMap(serializer::readObject)
                 .ifPresent(object -> {
                     register(selector, client, OP_WRITE);

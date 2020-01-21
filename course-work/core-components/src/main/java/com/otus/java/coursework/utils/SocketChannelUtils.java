@@ -11,6 +11,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentMap;
 
 import static com.otus.java.coursework.utils.ByteArrayUtils.flatMap;
 import static java.util.Arrays.copyOf;
@@ -109,7 +110,8 @@ public class SocketChannelUtils {
     }
 
     public static Optional<byte[]> readStepByStep(final SocketChannel socketChannel,
-                                                  final ByteBuffer buffer) {
+                                                  final ByteBuffer buffer,
+                                                  final ConcurrentMap<Integer, ByteBuffer> byteBuffers) {
         final List<byte[]> byteArrays = newArrayList();
         int readBytes = read(socketChannel, buffer);
         while (readBytes > 0) {
@@ -124,6 +126,7 @@ public class SocketChannelUtils {
         if (readBytes == -1) {
             log.info("{} connection's been closed", getRemoteAddress(socketChannel));
             close(socketChannel);
+            ofNullable(byteBuffers).ifPresent(buffers -> buffers.remove(buffer));
             return empty();
         }
         return of(flatMap(byteArrays));
