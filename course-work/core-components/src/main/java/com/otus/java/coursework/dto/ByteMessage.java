@@ -12,22 +12,22 @@ import java.io.ObjectOutput;
 @NoArgsConstructor
 public class ByteMessage implements Externalizable {
     private byte[] content;
-    private int length;
+    /*private int length;*/
 
     public ByteMessage(byte[] content) {
         this.content = content;
-        this.length = content.length;
+       /* this.length = content.length;*/
     }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        this.length = in.readInt();
+        /*        this.length = in.readInt();*/
         this.content = (byte[]) in.readObject();
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(length);
+/*        out.writeInt(length);*/
         out.writeObject(content);
     }
 }

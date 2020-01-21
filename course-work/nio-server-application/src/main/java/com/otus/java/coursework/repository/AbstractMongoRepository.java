@@ -1,5 +1,6 @@
 package com.otus.java.coursework.repository;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import lombok.RequiredArgsConstructor;
@@ -37,5 +38,9 @@ abstract class AbstractMongoRepository<T> implements MongoRepository<T> {
     public T save(final T entity) {
         getCollection().insertOne(map(entity));
         return entity;
+    }
+
+    public void removeAll() {
+        getCollection().deleteMany(new BasicDBObject());
     }
 }

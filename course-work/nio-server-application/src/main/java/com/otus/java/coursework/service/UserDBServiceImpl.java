@@ -8,6 +8,7 @@ import com.otus.java.coursework.repository.MongoRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -37,5 +38,10 @@ public class UserDBServiceImpl implements UserDBService {
         return repository.findAll().stream()
                 .map(Mapper::map)
                 .collect(toList());
+    }
+
+    @PostConstruct
+    public void init() {
+        repository.removeAll();
     }
 }

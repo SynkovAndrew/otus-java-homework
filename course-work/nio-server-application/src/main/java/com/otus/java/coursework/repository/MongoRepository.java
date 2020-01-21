@@ -6,4 +6,6 @@ public interface MongoRepository<T> {
     List<T> findAll();
 
     T save(T entity);
+
+    void removeAll();
 }
