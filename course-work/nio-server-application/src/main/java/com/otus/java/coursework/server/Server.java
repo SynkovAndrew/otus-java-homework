@@ -26,6 +26,7 @@ import static com.otus.java.coursework.utils.SocketChannelUtils.*;
 import static java.nio.ByteBuffer.allocate;
 import static java.nio.ByteBuffer.wrap;
 import static java.nio.channels.SelectionKey.*;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 @Slf4j
 @Component
@@ -35,20 +36,30 @@ public class Server {
     private final ServerRequestExecutor executor;
     private final Serializer serializer;
     private final ExecutorService serverRunner;
+    private final Selector selector;
+    private final ServerSocketChannel serverSocketChannel;
     @Value("${server.socket.host}")
     private String host;
     @Value("${server.socket.port}")
     private int port;
-    private Selector selector;
-    private ServerSocketChannel serverSocketChannel;
 
     public Server(final ServerRequestExecutor executor,
-                  final ExecutorService serverRunner,
-                  final Serializer serializer) {
+                  final Serializer serializer) throws IOException {
         this.byteBuffers = new ConcurrentHashMap<>();
+        this.serverRunner = newSingleThreadExecutor();
         this.executor = executor;
-        this.serverRunner = serverRunner;
         this.serializer = serializer;
+        this.selector = Selector.open();
+        this.serverSocketChannel = ServerSocketChannel.open();
+        this.serverSocketChannel.configureBlocking(false);
+        this.serverSocketChannel.register(selector, OP_ACCEPT);
+    }
+
+    @PostConstruct
+    public void init() throws IOException {
+        this.serverSocketChannel.bind(new InetSocketAddress(host, port));
+        this.serverRunner.execute(this::run);
+        log.info("Server's been started at {}:{}", host, port);
     }
 
     private void handleAccept() {
@@ -64,23 +75,12 @@ public class Server {
         SocketChannelUtils.destroy(selector, serverSocketChannel);
     }
 
-    @PostConstruct
-    public void init() throws IOException {
-        selector = Selector.open();
-        serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.bind(new InetSocketAddress(host, port));
-        serverSocketChannel.configureBlocking(false);
-        serverSocketChannel.register(selector, OP_ACCEPT);
-        serverRunner.execute(this::run);
-        log.info("Server's been started at {}:{}", host, port);
-    }
-
     private void handleRead(final SelectionKey key) {
         final SocketChannel client = (SocketChannel) key.channel();
         final int clientId = client.hashCode();
         final ByteBuffer buffer = byteBuffers.get(clientId);
         readStepByStep(client, buffer, byteBuffers)
-                .flatMap(serializer::readObject)
+                .flatMap(bytes -> serializer.readObject(bytes, Object.class))
                 .ifPresent(object -> {
                     register(selector, client, OP_WRITE);
                     executor.acceptRequest(clientId, object);

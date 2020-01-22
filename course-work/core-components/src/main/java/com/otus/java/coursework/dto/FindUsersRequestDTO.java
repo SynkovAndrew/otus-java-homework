@@ -12,5 +12,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FindUsersRequestDTO implements Serializable {
+    private static final long serialVersionUID = 12564342345L;
     private String name;
 }

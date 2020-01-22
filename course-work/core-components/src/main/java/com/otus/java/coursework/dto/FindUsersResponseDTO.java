@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @ToString(of = {"size"})
 public class FindUsersResponseDTO implements Serializable {
+    private static final long serialVersionUID = 1213245636342345L;
     private List<UserDTO> content;
     private int size;
 }

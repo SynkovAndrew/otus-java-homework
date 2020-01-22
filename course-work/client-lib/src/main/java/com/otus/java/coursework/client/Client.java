@@ -53,13 +53,13 @@ public class Client implements AutoCloseable {
                         while (selectedKeys.hasNext()) {
                             SelectionKey key = selectedKeys.next();
                             if (key.isReadable()) {
-                                SocketChannel client = (SocketChannel) key.channel();
-                                readStepByStep(client, buffer, null)
-                                        .flatMap(serializer::readObject)
-                                        .ifPresent(readObject -> {
-                                            final Object o = serializer.readObject(((ByteMessage) readObject).getContent()).get();
-                                            log.info("Response from server's been received: {}", o);
-                                        });
+                                final SocketChannel client = (SocketChannel) key.channel();
+                                final Object responseFromServer = readStepByStep(client, buffer, null)
+                                        .flatMap(readBytes -> serializer.readObject(readBytes, ByteMessage.class))
+                                        .map(ByteMessage::getContent)
+                                        .flatMap(contentBytes -> serializer.readObject(contentBytes, Object.class))
+                                        .orElse(null);
+                                log.info("Response from server's been received: {}", responseFromServer);
                                 return;
                             }
                             selectedKeys.remove();

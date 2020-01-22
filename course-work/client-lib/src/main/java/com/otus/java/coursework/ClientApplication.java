@@ -21,7 +21,7 @@ public class ClientApplication {
         } catch (FailedToCreateClientException | IOException e) {
             log.error("Failed o create client", e);
         }
-        Thread.sleep(60000);
+        Thread.sleep(10000);
         for (int clientNumber = 1; clientNumber <= 500; clientNumber++) {
             executorService.submit(() -> {
                 try (final var client = new Client("localhost", 4455, new SerializerImpl())) {
@@ -37,7 +37,7 @@ public class ClientApplication {
                 }
             });
         }
-        Thread.sleep(60000);
+        Thread.sleep(10000);
         try (final var client = new Client("localhost", 4455, new SerializerImpl())) {
             client.send(FindUsersRequestDTO.builder().build());
         } catch (FailedToCreateClientException | IOException e) {

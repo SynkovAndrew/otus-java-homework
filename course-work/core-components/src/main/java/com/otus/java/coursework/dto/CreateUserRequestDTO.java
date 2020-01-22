@@ -12,6 +12,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateUserRequestDTO implements Serializable {
+    private static final long serialVersionUID = 123412342345L;
     private String name;
     private Integer age;
 }

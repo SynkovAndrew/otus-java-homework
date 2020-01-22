@@ -3,7 +3,7 @@ package com.otus.java.coursework.serialization;
 import java.util.Optional;
 
 public interface Serializer {
-    Optional<Object> readObject(byte[] bytes);
+    <T> Optional<T> readObject(byte[] bytes, Class<T> clazz);
 
     Optional<byte[]> writeObject(Object object);
 }
