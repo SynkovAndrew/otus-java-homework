@@ -1,5 +1,6 @@
 package com.otus.java.coursework.executor;
 
+import com.otus.java.coursework.dto.ByteMessage;
 import com.otus.java.coursework.serialization.Serializer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +18,7 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
 public abstract class AbstractServerRequestExecutor {
     protected final Serializer serializer;
     private final ExecutorService executorService;
-    private final Map<Integer, Object> responses;
+    private final Map<Integer, ByteMessage> responses;
 
     protected AbstractServerRequestExecutor(final int threadPoolSize, final Serializer serializer) {
         this.responses = new ConcurrentHashMap<>();
@@ -25,12 +26,12 @@ public abstract class AbstractServerRequestExecutor {
         this.serializer = serializer;
     }
 
-    void executeRequest(final int clientId, final Supplier<Object> supplier) {
+    void executeRequest(final int clientId, final Supplier<ByteMessage> supplier) {
         supplyAsync(supplier, executorService)
                 .thenApply((response) -> responses.put(clientId, response));
     }
 
-    public Optional<Object> getResponse(final int clientId) {
+    public Optional<ByteMessage> getResponse(final int clientId) {
         return ofNullable(responses.get(clientId));
     }
 

@@ -18,11 +18,11 @@ public class ConsoleServerRequestExecutor extends AbstractServerRequestExecutor 
     }
 
     @Override
-    public void acceptRequest(final int clientId, final Object object) {
+    public void acceptRequest(final int clientId, final ByteMessage message) {
         executeRequest(clientId, () -> {
-            serializer.readObject(((ByteMessage) object).getContent(), Object.class)
+            serializer.readObject(message.getContent(), Object.class)
                     .ifPresent(content -> log.info("Data \"{}\" from client {} has been received", content, clientId));
-            return object;
+            return message;
         });
     }
 }

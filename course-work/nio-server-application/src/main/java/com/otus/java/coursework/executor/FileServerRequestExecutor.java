@@ -1,5 +1,6 @@
 package com.otus.java.coursework.executor;
 
+import com.otus.java.coursework.dto.ByteMessage;
 import com.otus.java.coursework.serialization.Serializer;
 import com.otus.java.coursework.service.FileService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,11 +26,11 @@ public class FileServerRequestExecutor extends AbstractServerRequestExecutor imp
     }
 
     @Override
-    public void acceptRequest(final int clientId, final Object object) {
+    public void acceptRequest(final int clientId, final ByteMessage message) {
         executeRequest(clientId, () -> {
-            log.info("Writing data {} from client {} to file...", object, clientId);
-            fileService.writeToFile(fileName, object);
-            return object;
+            serializer.readObject(message.getContent(), Object.class)
+                    .ifPresent(content -> fileService.writeToFile(fileName, content));
+            return message;
         });
     }
 }

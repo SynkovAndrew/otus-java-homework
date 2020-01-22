@@ -1,5 +1,6 @@
 package com.otus.java.coursework.server;
 
+import com.otus.java.coursework.dto.ByteMessage;
 import com.otus.java.coursework.executor.ServerRequestExecutor;
 import com.otus.java.coursework.serialization.Serializer;
 import com.otus.java.coursework.utils.SocketChannelUtils;
@@ -80,7 +81,7 @@ public class Server {
         final int clientId = client.hashCode();
         final ByteBuffer buffer = byteBuffers.get(clientId);
         readStepByStep(client, buffer, byteBuffers)
-                .flatMap(bytes -> serializer.readObject(bytes, Object.class))
+                .flatMap(bytes -> serializer.readObject(bytes, ByteMessage.class))
                 .ifPresent(object -> {
                     register(selector, client, OP_WRITE);
                     executor.acceptRequest(clientId, object);

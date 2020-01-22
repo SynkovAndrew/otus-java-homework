@@ -27,8 +27,8 @@ public class DatabaseServerRequestExecutor extends AbstractServerRequestExecutor
     }
 
     @Override
-    public void acceptRequest(final int clientId, final Object object) {
-        executeRequest(clientId, () -> serializer.readObject(((ByteMessage) object).getContent(), Object.class)
+    public void acceptRequest(final int clientId, final ByteMessage object) {
+        executeRequest(clientId, () -> serializer.readObject(object.getContent(), Object.class)
                 .map(content -> {
                     log.info("Processing request {} from client {}...", content, clientId);
                     if (content instanceof CreateUserRequestDTO) {
