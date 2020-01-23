@@ -18,15 +18,15 @@ import static java.nio.ByteBuffer.wrap;
 import static java.nio.channels.SelectionKey.OP_READ;
 
 @Slf4j
-public class Client implements AutoCloseable {
+public class ClientLibrary implements AutoCloseable {
     private final Serializer serializer;
     private final SocketChannel socketChannel;
     private final Selector selector;
     private final ByteBuffer buffer;
 
-    public Client(final String host,
-                  final int port,
-                  final Serializer serializer) throws FailedToCreateClientException, IOException {
+    public ClientLibrary(final String host,
+                         final int port,
+                         final Serializer serializer) throws FailedToCreateClientException, IOException {
         this.socketChannel = openSocketChannel(host, port)
                 .orElseThrow(FailedToCreateClientException::new);
         this.socketChannel.configureBlocking(false);
