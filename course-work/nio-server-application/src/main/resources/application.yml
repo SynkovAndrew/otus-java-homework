@@ -1,0 +1,17 @@
+server.socket:
+  host: localhost
+  port: 4455
+
+database:
+  uri: mongodb://localhost:27017
+  name: nio-server-database
+
+# possible implementations: console, file, database
+server.action.executor.implementation: database
+server.action.executor.thread.pool.size: 10
+file.server.action.executor.file.name: output.txt
+file.server.action.executor.folder.name: ./course-work/nio-server-application/src/main/resources/
+
+logging:
+  level:
+    root: INFO
